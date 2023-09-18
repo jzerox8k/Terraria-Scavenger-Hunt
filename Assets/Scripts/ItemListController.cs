@@ -17,7 +17,7 @@ public class ItemListController : MonoBehaviour
     public static event Action OnDatasetLoaded;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
         Verify();
 
@@ -73,7 +73,13 @@ public class ItemListController : MonoBehaviour
         }
 
         // update the randomizer controller
+        Debug.Log($"about to invoke OnDatasetLoaded event Action");
         OnDatasetLoaded.Invoke();
+    }
+
+    private void Awake()
+    {
+        
     }
 
     private void Verify()

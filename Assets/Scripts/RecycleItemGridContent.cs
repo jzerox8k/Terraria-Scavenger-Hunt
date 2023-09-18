@@ -19,13 +19,15 @@ public class RecycleItemGridContent : MonoBehaviour
     public float viewportHeight;
     public float contentHeight;
 
-    private void Start()
+    private void Awake()
     {
+        Debug.Log($"subscribing to event ItemListController.OnDatasetLoaded");
         ItemListController.OnDatasetLoaded += OnDatasetLoaded;
     }
 
     private void OnDatasetLoaded()
     {
+        Debug.Log($"test OnDatasetLoaded method invoked");
         SetScrollRectParams();
         scrollbar.onValueChanged.AddListener(OnScroll);
     }
