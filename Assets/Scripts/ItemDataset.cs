@@ -8,7 +8,7 @@ using PolyAndCode.UI;
 
 namespace TerrariaAssets
 {
-    public class ItemDataset
+    public class ItemDataset : IRecyclableScrollRectDataSource
     {
         public static ItemDataset Instance = new ItemDataset();
         public Dictionary<int, ItemData> Items = new Dictionary<int, ItemData>();
@@ -18,9 +18,10 @@ namespace TerrariaAssets
             return Instance.Items.Count;
         }
 
-        public void SetCell(ItemListElement itemListElement, int index)
+        public void SetContentElementData(IRecyclableScrollRectContentElement element, int index)
         {
-            itemListElement.ConfigureCell(Instance.Items.Values.ToList()[index]);
+            ItemListElement itemListElement = element as ItemListElement;
+            itemListElement.ConfigureElement(Instance.Items.Values.ToList()[index]);
         }
     }
 }

@@ -32,11 +32,6 @@ public class ItemListController : MonoBehaviour
 
         Debug.Log($"{itemJsonData.Count} items found after removing unobtainable items");
 
-        foreach (Transform child in content)
-        {
-            Destroy(child.gameObject);
-        }
-
         foreach (ItemData itemData in itemJsonData.Values)
         {
             /* OLD IMPLEMENTATION */
@@ -65,11 +60,11 @@ public class ItemListController : MonoBehaviour
             ItemDataset.Instance.Items.Add(itemData.itemid, itemData);
 
             /*
-            if (itemData.itemid == 250)
-            {
-                break;
-            }
             */
+            //if (itemData.itemid == 250)
+            //{
+            //    break;
+            //}
         }
 
         // update the randomizer controller

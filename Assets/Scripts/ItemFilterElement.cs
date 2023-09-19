@@ -6,5 +6,5 @@ using TerrariaAssets;
 
 public class ItemFilterElement : ItemListElement
 {
-
+    public CanvasGroup canvasGroup;
 }

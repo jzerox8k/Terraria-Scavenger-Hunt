@@ -19,7 +19,7 @@ public class ItemRandomizerController : MonoBehaviour
     public const int MaxItems = 25;
     private const string AlphaNumericCipher = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+";
 
-    void Start()
+    void Awake()
     {
         itemGridElements = new List<ItemGridElement>();
         itemData = new List<ItemData>();

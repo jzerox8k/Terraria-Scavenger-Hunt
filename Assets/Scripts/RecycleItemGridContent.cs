@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TerrariaAssets;
+using System.Linq;
+using UnityEditor;
+
 
 public class RecycleItemGridContent : MonoBehaviour
 {
@@ -11,87 +14,221 @@ public class RecycleItemGridContent : MonoBehaviour
     public RectTransform contentRectTransform;
     public GridLayoutGroup contentGridLayoutGroup;
     public GameObject itemListElementPrefab;
-    public ScrollRect scrollRect;
     public Scrollbar scrollbar;
 
-    public List<ItemListElement> items = new List<ItemListElement>();
+    public List<ItemFilterElement> items = new List<ItemFilterElement>();
 
-    public float viewportHeight;
-    public float contentHeight;
+    public Vector2 viewportDimensions = new Vector2();
+    public Vector2 contentDimensions = new Vector2();
+    public Vector2Int viewportDimensionsInCells = new Vector2Int();
+
+    // TODO: we don't need to update the cell dimensions and spacing on every frame update
+    // but if we want to make them resizeable in the future we will need to listen to a UI event 
+    public Vector2 cellDimensions = new Vector2();
+    public Vector2 cellSpacing = new Vector2();
+
+    public (int, int) indexRangeBeingRendered;
 
     private void Awake()
     {
         Debug.Log($"subscribing to event ItemListController.OnDatasetLoaded");
+
         ItemListController.OnDatasetLoaded += OnDatasetLoaded;
     }
 
+    // yield return new WaitForEndOfFrame();
+
     private void OnDatasetLoaded()
     {
-        Debug.Log($"test OnDatasetLoaded method invoked");
-        SetScrollRectParams();
-        scrollbar.onValueChanged.AddListener(OnScroll);
+        StartCoroutine(AwaitContentChildDestruction());
     }
 
-    private void SetScrollRectParams()
+    IEnumerator AwaitContentChildDestruction()
     {
-        /*
-        {
-            Debug.Log($"viewportRectTransform: ");
-            Debug.Log($"rect.height: {viewportRectTransform.rect.height}");
-            Debug.Log($"rect.position: {viewportRectTransform.rect.position}");
-
-            Debug.Log($"contentRectTransform: ");
-            Debug.Log($"rect.height: {contentRectTransform.rect.height}");
-            Debug.Log($"rect.position: {contentRectTransform.rect.position}");
-
-            contentRectTransform.ForceUpdateRectTransforms();
-
-            var x1 = contentGridLayoutGroup.cellSize;
-            var x2 = contentGridLayoutGroup.spacing;
-            var x3 = contentGridLayoutGroup.constraintCount;
-            var x4 = contentGridLayoutGroup.Size();
-
-            Debug.Log($"cellSize: {x1}");
-            Debug.Log($"spacing: {x2}");
-            Debug.Log($"constraintCount: {x3}");
-            Debug.Log($"Size: {x4}");
-        }
-        */
-
-        foreach (ItemData itemData in ItemDataset.Instance.Items.Values)
-        {
-            GameObject gameObject = Instantiate(itemListElementPrefab, contentRectTransform);
-            ItemListElement elem = gameObject.GetComponent<ItemListElement>();
-            elem.ConfigureCell(itemData);
-        }
-        Debug.Log($"{contentRectTransform.childCount} items in contentRectTransform");
+        Debug.Log($"test OnDatasetLoaded method invoked");
 
         Canvas.ForceUpdateCanvases();
 
-        var x1 = contentRectTransform.childCount;
-        var rectWidth = contentRectTransform.rect.width + contentGridLayoutGroup.spacing.x;
-        var rectHeight = contentRectTransform.rect.height + contentGridLayoutGroup.spacing.y;
+        // update the grid and cell dimension information so we can calculate viewport grid conversions
+        UpdateGridAndCellDimensions();
+        UpdateViewportDimensions();
 
-        var viewportHeight = viewportRectTransform.rect.height;
+        scrollbar.onValueChanged.AddListener(OnScroll);
 
-        var cellWidthWithSpacing = contentGridLayoutGroup.cellSize.x + contentGridLayoutGroup.spacing.x;
-        var cellHeightWithSpacing = contentGridLayoutGroup.cellSize.y + contentGridLayoutGroup.spacing.y;
+        Debug.Log($"{contentRectTransform.childCount} items in contentRectTransform");
 
-        Debug.Log($"rectWidth/cellWidth: {rectWidth/cellWidthWithSpacing}");
-        Debug.Log($"rectHeight/cellHeightWithSpacing: {rectHeight/cellHeightWithSpacing}");
+        foreach (Transform child in contentRectTransform.transform)
+        {
+            Destroy(child.gameObject);
+        }
 
-        Debug.Log($"viewportHeight/cellHeightWithSpacing: {viewportHeight/cellHeightWithSpacing}");
+        yield return new WaitForEndOfFrame();
 
-        // we need viewportHeight/cellHeightWithSpacing + 2
-        // 1 row ahead and 1 row behind
-        var maxRowsInViewport = Mathf.RoundToInt(viewportHeight / cellHeightWithSpacing) + 2;
+        Debug.Log($"{contentRectTransform.childCount} items in contentRectTransform");
 
-        Debug.Log($"{contentGridLayoutGroup.Size()}");
+        indexRangeBeingRendered = GetFirstAndLastIndicesToRender(scrollbar.value, viewportDimensionsInCells, ItemDataset.Instance);
+
+        RenderAndPadGridLayout(indexRangeBeingRendered);
+    }
+
+
+    private void Update()
+    {
+        if (viewportRectTransform.hasChanged)
+        {
+            print($"viewportRectTransform has changed");
+            UpdateViewportDimensions();
+            UpdateContentRectDimensions(ItemDataset.Instance);
+            viewportRectTransform.hasChanged = false;
+        }
+    }
+
+    private void UpdateContentRectDimensions(IRecyclableScrollRectDataSource dataSource)
+    {
+        float totalHeight = Mathf.CeilToInt(dataSource.GetItemCount() / viewportDimensionsInCells.x) * (cellDimensions.y + cellSpacing.y);
+        Debug.Log($"totalHeight: {totalHeight}");
+    }
+
+    private void UpdateViewportDimensions()
+    {
+        viewportDimensions = viewportRectTransform.rect.size;
+        viewportDimensionsInCells = ConvertRectDimensionsToDimensionsInCells(viewportDimensions, cellDimensions, cellSpacing);
+        Debug.Log($"viewportDimensions: {viewportDimensions}");
+        Debug.Log($"viewportDimensionsInCells: {viewportDimensionsInCells}");
+    }
+
+    private void UpdateGridAndCellDimensions()
+    {
+        cellDimensions = contentGridLayoutGroup.cellSize;
+        cellSpacing = contentGridLayoutGroup.spacing;
+        Debug.Log($"cellDimensions: {cellDimensions}");
+        Debug.Log($"cellSpacing: {cellSpacing}");
+    }
+
+    private Vector2Int ConvertRectDimensionsToDimensionsInCells(Vector2 rectDimensions, Vector2 cellDimensions, Vector2 cellSpacing)
+    {
+        Debug.Log($"rectDimensions: {rectDimensions}");
+        Debug.Log($"cellDimensions: {cellDimensions}");
+        Debug.Log($"cellSpacing: {cellSpacing}");
+
+        /* length = n cells and n-1 spaces between them
+         * l = n*x + (n-1)*s
+         * solve for n:
+         * l = n*x + n*s - s
+         * l + s = n*(x + s)
+         * (l + s)/(x + s) = n 
+         */
+
+        var viewportWidthInCells = Mathf.FloorToInt((rectDimensions.x + cellSpacing.x) / (cellDimensions.x + cellSpacing.x));
+        var viewportHeightInCells = Mathf.FloorToInt((rectDimensions.y + cellSpacing.y) / (cellDimensions.y + cellSpacing.y));
+
+        return new Vector2Int(viewportWidthInCells, viewportHeightInCells);
+    }
+
+    public (int, int) GetFirstAndLastIndicesToRender(float scrollbarValue, Vector2Int viewportDimensionsInCells, IRecyclableScrollRectDataSource dataSource)
+    {
+        float correctedScrollbarValue = 1 - scrollbarValue;
+
+        int firstCellIndex = Mathf.FloorToInt(correctedScrollbarValue * (Mathf.Ceil(dataSource.GetItemCount() / viewportDimensionsInCells.x) - viewportDimensionsInCells.y)) * viewportDimensionsInCells.x;
+        int lastCellIndex = Mathf.Min(dataSource.GetItemCount(), firstCellIndex + viewportDimensionsInCells.x * viewportDimensionsInCells.y);
+
+        int firstCellIndexToRender = Mathf.Max(0, firstCellIndex - viewportDimensionsInCells.x);
+        int lastCellIndexToRender = Mathf.Min(dataSource.GetItemCount(), lastCellIndex + viewportDimensionsInCells.x);
+
+        return (firstCellIndexToRender, lastCellIndexToRender);
     }
 
     public void OnScroll(float eventData)
     {
-        Debug.Log($"eventData: {eventData}");
-        Debug.Log($"rect.position: {contentRectTransform.anchoredPosition}");
+        //Debug.Log($"eventData: {eventData}");
+        //Debug.Log($"rect.position: {contentRectTransform.anchoredPosition}");
+
+        // compare current first index to render with the first index already rendered
+        (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(eventData, viewportDimensionsInCells, ItemDataset.Instance);
+        //Debug.Log($"indexRangeToRender: {indexRangeToRender}");
+
+        // if they are different
+        if (indexRangeBeingRendered != indexRangeToRender)
+        {
+            indexRangeBeingRendered = indexRangeToRender;
+            RenderAndPadGridLayout(indexRangeBeingRendered);
+        }
+    }
+
+    private void RenderAndPadGridLayout((int, int) indexRangeBeingRendered)
+    {
+        // re-render the grid and adjust padding accordingly
+        Debug.Log($"indexRangeBeingRendered: {indexRangeBeingRendered}");
+        RenderRecycledGrid(indexRangeBeingRendered, contentGridLayoutGroup, ItemDataset.Instance);
+
+        // pad the rows before the first rendered index
+        int rowsToPadBefore = GetRowsToPadBeforeFirstIndex(indexRangeBeingRendered.Item1, viewportDimensionsInCells.x);
+        int rowsToPadAfter = GetRowsToPadAfterLastIndex(indexRangeBeingRendered.Item2, viewportDimensionsInCells.x, ItemDataset.Instance.GetItemCount());
+
+        Debug.Log($"rowsToPadBefore: {rowsToPadBefore}");
+        Debug.Log($"rowsToPadAfter: {rowsToPadAfter}");
+
+        PadRecycledGrid(rowsToPadBefore, rowsToPadAfter, contentGridLayoutGroup, cellDimensions, cellSpacing);
+    }
+
+    private void RenderRecycledGrid((int, int) indexRangeBeingRendered, GridLayoutGroup contentGridLayoutGroup, IRecyclableScrollRectDataSource dataSource)
+    {
+        int indexToRender = indexRangeBeingRendered.Item1;
+        int lastIndexToRender = indexRangeBeingRendered.Item2;
+
+        int itemsToRenderCount = lastIndexToRender - indexToRender;
+        Debug.Log($"itemsToRenderCount: {itemsToRenderCount}, contentGridLayoutGroup.transform.childCount, {contentGridLayoutGroup.transform.childCount}");
+
+        while (itemsToRenderCount > contentGridLayoutGroup.transform.childCount)
+        {
+            GameObject gameObject = Instantiate(itemListElementPrefab, contentRectTransform.transform);
+            items.Add(gameObject.GetComponent<ItemFilterElement>());
+            Debug.Log($"itemsToRenderCount: {itemsToRenderCount}, contentGridLayoutGroup.transform.childCount, {contentGridLayoutGroup.transform.childCount}");
+        }
+
+        foreach (ItemFilterElement element in items)
+        {
+            if (indexToRender < lastIndexToRender)
+            { 
+                if (!element.enabled)
+                {
+                    element.enabled = true;
+                    element.gameObject.SetActive(true);
+                }
+                dataSource.SetContentElementData(element, indexToRender);
+                indexToRender++;
+            }
+            else
+            {
+                if (!element.enabled)
+                {
+                    element.enabled = false;
+                    element.gameObject.SetActive(false);
+                }
+            }
+        }
+    }
+
+    private void PadRecycledGrid(int rowsToPadBeforeFirstIndex, int rowsToPadAfterLastIndex, GridLayoutGroup contentGridLayoutGroup, Vector2 cellDimensions, Vector2 cellSpacing)
+    {
+        int paddingTop = Mathf.RoundToInt(rowsToPadBeforeFirstIndex * (cellDimensions.y + cellSpacing.y));
+        int paddingBottom = Mathf.RoundToInt(rowsToPadAfterLastIndex * (cellDimensions.y + cellSpacing.y));
+
+        contentGridLayoutGroup.padding.top = paddingTop;
+        contentGridLayoutGroup.padding.bottom = paddingBottom;
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(contentRectTransform);
+    }
+
+    private int GetRowsToPadBeforeFirstIndex(int indexFirst, int elementsPerRow)
+    {
+        return indexFirst / elementsPerRow;
+    }
+
+    private int GetRowsToPadAfterLastIndex(int indexLast, int elementsPerRow, int indexMax)
+    {
+        int rowMax = indexMax / elementsPerRow;
+        int rowCurrent = indexLast / elementsPerRow;
+        return rowMax - rowCurrent;
     }
 }

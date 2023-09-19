@@ -8,9 +8,19 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TerrariaAssets;
 
-using PolyAndCode.UI;
+public interface IRecyclableScrollRectContentElement
+{
 
-public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler
+}
+
+public interface IRecyclableScrollRectDataSource
+{
+    public abstract void SetContentElementData(IRecyclableScrollRectContentElement element, int index);
+
+    public abstract int GetItemCount();
+}
+
+public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler, IRecyclableScrollRectContentElement
 {
     public Image itemImage;
     public ItemData itemData;
@@ -37,10 +47,10 @@ public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExit
         }
     }
 
-    public void ConfigureCell(ItemData _itemData)
+    public void ConfigureElement(ItemData itemDataConfiguration)
     {
-        itemData = _itemData;
-        itemImage.sprite = _itemData.sprite;
+        this.itemData = itemDataConfiguration;
+        itemImage.sprite = itemDataConfiguration.sprite;
         itemImage.SetNativeSize();
     }
 }
