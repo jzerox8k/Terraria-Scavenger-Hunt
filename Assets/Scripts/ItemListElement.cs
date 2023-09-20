@@ -31,6 +31,7 @@ public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExit
     {
         hovered = true;
         Tooltip.ShowTooltip(itemData);
+        Tooltip.MoveTooltipToCursor();
     }
 
     public void OnPointerExit(PointerEventData eventData)

@@ -40,10 +40,10 @@ public class RecycleItemGridContent : MonoBehaviour
 
     private void OnDatasetLoaded()
     {
-        StartCoroutine(AwaitContentChildDestruction());
+        StartCoroutine(DestroyContentChildrenAndInitializeScrollRect());
     }
 
-    IEnumerator AwaitContentChildDestruction()
+    IEnumerator DestroyContentChildrenAndInitializeScrollRect()
     {
         Debug.Log($"test OnDatasetLoaded method invoked");
 
@@ -71,7 +71,6 @@ public class RecycleItemGridContent : MonoBehaviour
         RenderAndPadGridLayout(indexRangeBeingRendered);
     }
 
-
     private void Update()
     {
         if (viewportRectTransform.hasChanged)
@@ -80,6 +79,21 @@ public class RecycleItemGridContent : MonoBehaviour
             UpdateViewportDimensions();
             UpdateContentRectDimensions(ItemDataset.Instance);
             viewportRectTransform.hasChanged = false;
+
+            OnScroll(scrollbar.value);
+        }
+    }
+    public void OnScroll(float eventData)
+    {
+        // compare current first index to render with the first index already rendered
+        (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(eventData, viewportDimensionsInCells, ItemDataset.Instance);
+        Debug.Log($"indexRangeToRender: {indexRangeToRender}");
+
+        // if they are different
+        if (indexRangeBeingRendered != indexRangeToRender)
+        {
+            indexRangeBeingRendered = indexRangeToRender;
+            RenderAndPadGridLayout(indexRangeBeingRendered);
         }
     }
 
@@ -129,30 +143,16 @@ public class RecycleItemGridContent : MonoBehaviour
     {
         float correctedScrollbarValue = 1 - scrollbarValue;
 
-        int firstCellIndex = Mathf.FloorToInt(correctedScrollbarValue * (Mathf.Ceil(dataSource.GetItemCount() / viewportDimensionsInCells.x) - viewportDimensionsInCells.y)) * viewportDimensionsInCells.x;
+        int firstCellIndex = Mathf.CeilToInt(correctedScrollbarValue * (Mathf.Ceil(dataSource.GetItemCount() / viewportDimensionsInCells.x) - viewportDimensionsInCells.y)) * viewportDimensionsInCells.x;
         int lastCellIndex = Mathf.Min(dataSource.GetItemCount(), firstCellIndex + viewportDimensionsInCells.x * viewportDimensionsInCells.y);
+
+        Debug.Log($"firstCellIndex: {firstCellIndex}, lastCellIndex: {lastCellIndex}");
+        Debug.Log($"dataSource.GetItemCount(): {dataSource.GetItemCount()}");
 
         int firstCellIndexToRender = Mathf.Max(0, firstCellIndex - viewportDimensionsInCells.x);
         int lastCellIndexToRender = Mathf.Min(dataSource.GetItemCount(), lastCellIndex + viewportDimensionsInCells.x);
 
         return (firstCellIndexToRender, lastCellIndexToRender);
-    }
-
-    public void OnScroll(float eventData)
-    {
-        //Debug.Log($"eventData: {eventData}");
-        //Debug.Log($"rect.position: {contentRectTransform.anchoredPosition}");
-
-        // compare current first index to render with the first index already rendered
-        (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(eventData, viewportDimensionsInCells, ItemDataset.Instance);
-        //Debug.Log($"indexRangeToRender: {indexRangeToRender}");
-
-        // if they are different
-        if (indexRangeBeingRendered != indexRangeToRender)
-        {
-            indexRangeBeingRendered = indexRangeToRender;
-            RenderAndPadGridLayout(indexRangeBeingRendered);
-        }
     }
 
     private void RenderAndPadGridLayout((int, int) indexRangeBeingRendered)
@@ -184,6 +184,15 @@ public class RecycleItemGridContent : MonoBehaviour
             GameObject gameObject = Instantiate(itemListElementPrefab, contentRectTransform.transform);
             items.Add(gameObject.GetComponent<ItemFilterElement>());
             Debug.Log($"itemsToRenderCount: {itemsToRenderCount}, contentGridLayoutGroup.transform.childCount, {contentGridLayoutGroup.transform.childCount}");
+        }
+
+        if (itemsToRenderCount < items.Count)
+        {
+            foreach (var item in items.GetRange(itemsToRenderCount, items.Count - itemsToRenderCount))
+            {
+                Destroy(item.gameObject);
+            }
+            items.RemoveRange(itemsToRenderCount, items.Count - itemsToRenderCount);
         }
 
         foreach (ItemFilterElement element in items)
@@ -227,8 +236,14 @@ public class RecycleItemGridContent : MonoBehaviour
 
     private int GetRowsToPadAfterLastIndex(int indexLast, int elementsPerRow, int indexMax)
     {
-        int rowMax = indexMax / elementsPerRow;
-        int rowCurrent = indexLast / elementsPerRow;
+        // the ternary modulus for rowMax (i % r == 0 ? 0 : 1) is important to keep the scroll flow smooth at the end of the list
+        int rowMax = indexMax / elementsPerRow + (indexMax % elementsPerRow == 0 ? 0 : 1);
+        Debug.Log($"indexMax / elementsPerRow: {indexMax} / {elementsPerRow}, rowMax: {rowMax}");
+        // the ternary modulus for rowCurrent (i % r == 0 ? 0 : 1) is important to keep the scroll position corrected at the end of the list
+        // otherwise, having a non-multiple of elementsPerRow items results in an extra row of padding to be added
+        int rowCurrent = indexLast / elementsPerRow + (indexLast % elementsPerRow == 0 ? 0 : 1);
+        Debug.Log($"indexLast / elementsPerRow: {indexLast} / {elementsPerRow}, rowMax: {rowCurrent}");
+
         return rowMax - rowCurrent;
     }
 }
