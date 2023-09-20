@@ -60,11 +60,11 @@ public class ItemListController : MonoBehaviour
             ItemDataset.Instance.Items.Add(itemData.itemid, itemData);
 
             /*
+            if (itemData.itemid == 250)
+            {
+                break;
+            }
             */
-            //if (itemData.itemid == 250)
-            //{
-            //    break;
-            //}
         }
 
         // update the randomizer controller
