@@ -33,7 +33,7 @@ public class ItemRandomizerController : MonoBehaviour
         foreach (Transform child in transform)
         {
             GameObject childImageGameObject = child.Find("Image").gameObject;
-            ItemGridElement itemGridElement = child.GetComponent<ItemGridElement>();
+            ItemGridElement itemGridElement = child.GetComponentInChildren<ItemGridElement>();
             itemGridElement.itemImage = childImageGameObject.GetComponent<Image>();
             itemGridElements.Add(itemGridElement);
         }

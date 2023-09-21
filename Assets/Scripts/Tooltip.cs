@@ -52,20 +52,24 @@ public class Tooltip: MonoBehaviour
     private void _ShowTooltip(ItemData itemData)
     {
         SetItemInfoTabText(itemData);
-        //Debug.Log($"{itemName.text} is hovered");
+        Debug.Log($"{itemName.text} is hovered");
         gameObject.SetActive(true);
     }
 
     private void _HideTooltip()
     {
-        //Debug.Log($"{itemName.text} is no longer hovered");
+        Debug.Log($"{itemName.text} is no longer hovered");
         ClearItemInfoTabText();
         gameObject.SetActive(false);
     }
 
     private void _MoveTooltipToCursor()
     {
-        Vector3 targetPosition = (Input.mousePosition / canvasRectTransform.localScale.x) + offset + new Vector3(0, -infoTabRectTransform.rect.height);
+        Canvas.ForceUpdateCanvases();
+
+        /* this implementation if for the overlay canvas */
+        //Vector3 targetPosition = (Input.mousePosition / canvasRectTransform.localScale.x) + offset + new Vector3(0, -infoTabRectTransform.rect.height);
+        Vector3 targetPosition = (Input.mousePosition) + offset + new Vector3(0, -infoTabRectTransform.rect.height);
 
         Instance.infoTabRectTransform.anchoredPosition = targetPosition;
 

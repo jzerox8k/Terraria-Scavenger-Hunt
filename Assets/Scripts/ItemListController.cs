@@ -34,37 +34,13 @@ public class ItemListController : MonoBehaviour
 
         foreach (ItemData itemData in itemJsonData.Values)
         {
-            /* OLD IMPLEMENTATION */
-            /*
-            // create a new item in the content game object
-            GameObject newGameObject = Instantiate(itemPrefab.gameObject, content);
-            */
-
             // retrieve the image for the item from the assets and insert it into the image dataset
             string path = "Image Data/" + itemData.imagefile.Split(".")[0];
             Sprite sprite = Resources.Load<Sprite>(path);
             itemJsonData[itemData.itemid].sprite = sprite;
 
-            /* OLD IMPLEMENTATION */
-            /*
-            // update the new child item of the content game object
-            ItemListElement elem = newGameObject.GetComponent<ItemListElement>();
-
-            elem.itemData = itemData;
-            elem.itemImage.sprite = sprite;
-            elem.itemImage.SetNativeSize();
-            */
-
-            /* NEW IMPLEMENTATION */
             // insert the item list element into the item dataset
             ItemDataset.Instance.Items.Add(itemData.itemid, itemData);
-
-            /*
-            if (itemData.itemid == 250)
-            {
-                break;
-            }
-            */
         }
 
         // update the randomizer controller

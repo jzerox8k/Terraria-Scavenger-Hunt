@@ -323,7 +323,7 @@ GameObject:
   - component: {fileID: 3314290936393398619}
   - component: {fileID: 5961223074892655286}
   - component: {fileID: 2992740881522193027}
-  - component: {fileID: 5059252190012923924}
+  - component: {fileID: 9025109550095270600}
   m_Layer: 5
   m_Name: Item List Entry
   m_TagString: Untagged
@@ -347,11 +347,11 @@ RectTransform:
   - {fileID: 2862103400367430777}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 120, y: 120}
-  m_Pivot: {x: 0, y: 1}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3314290936393398619
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -402,7 +402,7 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!114 &5059252190012923924
+--- !u!114 &9025109550095270600
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
