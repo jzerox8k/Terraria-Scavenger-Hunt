@@ -8,7 +8,7 @@ using UnityEngine.UI;
 using TMPro;
 using TerrariaAssets;
 
-public class Tooltip: MonoBehaviour
+public class Tooltip : MonoBehaviour
 {
     public TMP_Text itemName;
     public TMP_Text itemTooltip;
