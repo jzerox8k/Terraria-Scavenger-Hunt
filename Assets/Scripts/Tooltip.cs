@@ -52,13 +52,13 @@ public class Tooltip : MonoBehaviour
     private void _ShowTooltip(ItemData itemData)
     {
         SetItemInfoTabText(itemData);
-        Debug.Log($"{itemName.text} is hovered");
+        //Debug.Log($"{itemName.text} is hovered");
         gameObject.SetActive(true);
     }
 
     private void _HideTooltip()
     {
-        Debug.Log($"{itemName.text} is no longer hovered");
+        //Debug.Log($"{itemName.text} is no longer hovered");
         ClearItemInfoTabText();
         gameObject.SetActive(false);
     }

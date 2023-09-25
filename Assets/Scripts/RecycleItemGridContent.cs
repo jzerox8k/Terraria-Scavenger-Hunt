@@ -32,21 +32,17 @@ public class RecycleItemGridContent : MonoBehaviour
     private void Awake()
     {
         ////Debug.Log($"subscribing to event ItemListController.OnDatasetLoaded");
-
         ItemListController.OnDatasetLoaded += OnDatasetLoaded;
     }
 
-    // yield return new WaitForEndOfFrame();
-
     private void OnDatasetLoaded()
     {
+        ////Debug.Log($"test OnDatasetLoaded method invoked");
         StartCoroutine(DestroyContentChildrenAndInitializeScrollRect());
     }
 
     IEnumerator DestroyContentChildrenAndInitializeScrollRect()
     {
-        ////Debug.Log($"test OnDatasetLoaded method invoked");
-
         Canvas.ForceUpdateCanvases();
 
         // update the grid and cell dimension information so we can calculate viewport grid conversions
@@ -55,16 +51,12 @@ public class RecycleItemGridContent : MonoBehaviour
 
         scrollbar.onValueChanged.AddListener(OnScroll);
 
-        ////Debug.Log($"{contentRectTransform.childCount} items in contentRectTransform");
-
         foreach (Transform child in contentRectTransform.transform)
         {
             Destroy(child.gameObject);
         }
 
         yield return new WaitForEndOfFrame();
-
-        ////Debug.Log($"{contentRectTransform.childCount} items in contentRectTransform");
 
         indexRangeBeingRendered = GetFirstAndLastIndicesToRender(scrollbar.value, viewportDimensionsInCells, ItemDataset.Instance);
 
@@ -75,7 +67,7 @@ public class RecycleItemGridContent : MonoBehaviour
     {
         if (viewportRectTransform.hasChanged)
         {
-            print($"viewportRectTransform has changed");
+            ////Debug.Log($"viewportRectTransform has changed");
             UpdateViewportDimensions();
             UpdateContentRectDimensions(ItemDataset.Instance);
             viewportRectTransform.hasChanged = false;
