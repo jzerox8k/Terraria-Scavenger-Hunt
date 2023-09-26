@@ -1,214 +1,199 @@
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine.UI;
-using TMPro;
-using System;
+using UnityEngine;
+using UnityEngine.UIElements;
 
-public class PackedLayoutGroup : MonoBehaviour
+public class PackedLayoutGroup : HorizontalOrVerticalLayoutGroup
 {
-    // TODO: we might want to implement a packed layout using simpler Unity UI components
-    // it may be more effective to implement the MonoBehaviour class and use that as a base
-    // and build the PackedLayoutGroup script using the other layout groups or simpler code
-    // rather than implementing a whole new class inheriting from LayoutGroup
+    public int rows;
 
-    // TODO: we want avoid implementations that use other layout groups
-    // if possible we should force the layout through the use of the code alone
-    // the implementation rewrite should occur in a separate class
-
-    // TODO: the current implementation works but has a few noticeable flaws
-    // - it is laggy during a window resize
-    // - it requires a very specific configuration of layout elements in the scene
-    //   - it specifically requires a workaround to limit the parent from stretching too far 
-    //     using a large negative right padding on the parent
-    // - it is not very stable when removing or adding items in bulk
-    // - the inspector is constantly emitting warnings about undefined behaviour
-    //   when using content size fitters on the children of layout groups
-    // the stability of the build with adding or removing multiple items is a drawback 
-    // of the current implementation using existing layout groups...
-    // a much better implementation would be to custom fit the objects
-    // under a parent transform and update it accordingly
-
-    // INFO: a link with information on Unity Layout Groups and their interactions
-    // with Content Size Fitters can be found here:
-    // https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/HOWTO-UIFitContentSize.html#make-children-of-a-layout-group-fit-their-respective-sizes
-
-    public RectTransform contentRectTransform;
-    public RectTransform widthLimitRectTransform;
-    List<Transform> contentRectTransformList = new List<Transform>();
-
-    public int contentRectTransformElementCount { get { return CountLayoutElements(); } }
-
-    public VerticalLayoutGroup rowsVerticalLayoutGroup;
-    List<HorizontalLayoutGroup> rowsVerticalLayoutGroupList = new List<HorizontalLayoutGroup>();
-    HorizontalLayoutGroup horizontalLayoutGroupRow;
-
-    // Start is called before the first frame update
-    void Start()
+    public void StartNewPackedRow(PackedRow packedRow)
     {
-        GameObject gameObject = new GameObject();
-        ContentSizeFitter contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
-        contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        horizontalLayoutGroupRow = gameObject.AddComponent<HorizontalLayoutGroup>();
+        packedRow.currentRow++;
+        packedRow.currentRowWidth = 0f;
+        packedRow.currentHeightFromTop += packedRow.currentRowMaxHeight + spacing;
+        packedRow.currentRowMaxHeight = 0f;
+        packedRow.firstChildInRow = true;
+    }
 
-        foreach (Transform horizontalLayoutGroupRowTransform in rowsVerticalLayoutGroup.transform)
+    public void MoveAlongExistingPackedRow(PackedRow packedRow, PackedLayoutElement layoutElement)
+    {
+        packedRow.currentRowWidth += layoutElement.width + spacing;
+        packedRow.firstChildInRow = false;
+    }
+
+    public void PlacePackedLayoutElement(RectTransform transform, PackedRow packedRow, PackedLayoutElement layoutElement)
+    {
+        SetChildAlongAxis(transform, 0, packedRow.currentPosition.x, layoutElement.prefferedWidth);
+        SetChildAlongAxis(transform, 1, packedRow.currentPosition.y, layoutElement.preferredHeight);
+
+        packedRow.currentRowMaxHeight = Mathf.Max(packedRow.currentRowMaxHeight, layoutElement.preferredHeight);
+        packedRow.firstChildInRow = false;
+    }
+
+    public void PlaceResizedPackedLayoutElement(RectTransform transform, PackedRow packedRow, PackedLayoutElement layoutElement)
+    {
+        if (childControlWidth)
         {
-            HorizontalLayoutGroup horizontalLayoutGroup;
-            if (horizontalLayoutGroupRowTransform.TryGetComponent(out horizontalLayoutGroup))
+            layoutElement.width = Mathf.Max(layoutElement.minWidth, Mathf.Min(layoutElement.prefferedWidth, packedRow.parentWidth));
+        }
+
+        /// height resizing is a bit tricky
+        /// it will depend on a number of factors for each layout element in a row
+        /// for now just allow all elements their preferred height
+
+        SetChildAlongAxis(transform, 0, packedRow.currentPosition.x, layoutElement.width);
+        SetChildAlongAxis(transform, 1, packedRow.currentPosition.y, layoutElement.preferredHeight);
+
+        packedRow.currentRowMaxHeight = Mathf.Max(packedRow.currentRowMaxHeight, layoutElement.preferredHeight);
+        packedRow.firstChildInRow = false;
+    }
+
+    public bool IsPackedLayoutElementOversizedForRow(PackedRow packedRow, PackedLayoutElement layoutElement)
+    {
+        return packedRow.currenrRowRemainingWidth < layoutElement.prefferedWidth;
+    }
+
+    public class PackedRow {
+        public int currentRow = 0;
+
+        public float currentRowWidth = 0f;
+        public float currentHeightFromTop = 0f;
+        public Vector2 currentPosition { get { return new Vector2(currentRowWidth, currentHeightFromTop); } }
+         
+        public float currentRowMaxHeight = 0f;
+        public float currenrRowRemainingWidth { get { return parentWidth - currentRowWidth; } }
+         
+        public bool firstChildInRow = true;
+
+        public float parentWidth;
+    }
+
+    public class PackedLayoutElement
+    {
+        public float prefferedWidth = 0f;
+        public float preferredHeight = 0f;
+        public float minWidth = 0f;
+        public float minHeight = 0f;
+        public float width = 0f;
+        public float height = 0f;
+    }
+
+    public override void CalculateLayoutInputHorizontal()
+    {
+        base.CalculateLayoutInputHorizontal();
+
+        var x = childControlHeight;
+        var y = childControlWidth;
+
+        float parentWidth = rectTransform.rect.width;
+        float parentHeight = rectTransform.rect.height;
+
+        PackedRow packedRow = new PackedRow();
+        packedRow.parentWidth = parentWidth;
+
+        foreach (RectTransform childRectTransform in rectChildren)
+        {
+            PackedLayoutElement layoutElement = new PackedLayoutElement();
+
+            ILayoutElement currentLayoutElement;
+            if (childRectTransform.TryGetComponent(out currentLayoutElement))
             {
-                rowsVerticalLayoutGroupList.Add(horizontalLayoutGroup);
+                layoutElement.width = layoutElement.prefferedWidth = currentLayoutElement.preferredWidth;
+                layoutElement.minWidth = currentLayoutElement.minWidth;
+
+                layoutElement.height = layoutElement.preferredHeight = currentLayoutElement.preferredHeight;
+                layoutElement.minHeight = currentLayoutElement.minHeight;
+            }
+            else
+            {
+                layoutElement.width = layoutElement.prefferedWidth = childRectTransform.rect.width;
+                layoutElement.height = layoutElement.preferredHeight = childRectTransform.rect.height;
+            }
+
+            /// if (not oversized) 
+            /// {
+            ///     place-normal()
+            ///     keep-row()
+            ///     return
+            /// }
+            /// else if (oversized) 
+            /// {
+            ///     if (first-element-in-row) 
+            ///     {
+            ///         place-resized()
+            ///         new-row()
+            ///         return
+            ///     }
+            ///     else if (not first-element-in-row) 
+            ///     {
+            ///         new-row()
+            ///         if (not oversized) 
+            ///         {
+            ///             place-normal()
+            ///             keep-row()
+            ///             return
+            ///         }
+            ///         else if (oversized) 
+            ///         {
+            ///             place-resized()
+            ///             new-row()
+            ///             return
+            ///         }
+            ///     }
+            /// }
+            /// 
+
+            if (!IsPackedLayoutElementOversizedForRow(packedRow, layoutElement))
+            {
+                PlacePackedLayoutElement(childRectTransform, packedRow, layoutElement);
+                MoveAlongExistingPackedRow(packedRow, layoutElement);
+                continue;
+            }
+            else
+            {
+                if (packedRow.firstChildInRow)
+                {
+                    PlaceResizedPackedLayoutElement(childRectTransform, packedRow, layoutElement);
+                    StartNewPackedRow(packedRow);
+                    continue;
+                }
+                else
+                {
+                    StartNewPackedRow(packedRow);
+                    if (!IsPackedLayoutElementOversizedForRow(packedRow, layoutElement))
+                    {
+                        PlacePackedLayoutElement(childRectTransform, packedRow, layoutElement);
+                        MoveAlongExistingPackedRow(packedRow, layoutElement);
+                        continue;
+                    }
+                    else
+                    {
+                        PlaceResizedPackedLayoutElement(childRectTransform, packedRow, layoutElement);
+                        StartNewPackedRow(packedRow);
+                        continue;
+                    }
+                }
             }
         }
-
-        StartCoroutine(UpdateCanvases());
     }
 
-    IEnumerator UpdateCanvases()
+    public override void CalculateLayoutInputVertical()
     {
-        yield return new WaitForEndOfFrame();
-        LayoutRebuilder.ForceRebuildLayoutImmediate(contentRectTransform);
+
     }
 
-    // Update is called once per frame
-    void Update()
+    public override void SetLayoutHorizontal()
     {
-        if (contentRectTransformElementCount != contentRectTransformList.Count || widthLimitRectTransform.hasChanged)
-        {
-            Debug.Log($"contentRectTransformElementCount: {contentRectTransformElementCount}");
-            Debug.Log($"contentRectTransformList.Count: {contentRectTransformList.Count}");
-            Debug.Log($"{widthLimitRectTransform.hasChanged}");
 
-            UpdateContentRectTransformList();
-            widthLimitRectTransform.hasChanged = false;
-        }
     }
 
-    int CountLayoutElements()
+    public override void SetLayoutVertical()
     {
-        int elementsCurrentlyRendered = 0;
 
-        foreach (Transform horizontalLayoutGroupTransform in rowsVerticalLayoutGroup.transform)
-        {
-            HorizontalLayoutGroup horizontalLayoutGroup = horizontalLayoutGroupTransform.GetComponent<HorizontalLayoutGroup>();
-            elementsCurrentlyRendered += horizontalLayoutGroup.transform.childCount;
-        }
-
-        foreach (Transform child in contentRectTransform)
-        {
-            // only count a child if it has no VerticalLayoutGroup component
-            // if the children have VerticalLayoutGroup components...
-            // only count them if they are not the rowsVerticalLayoutGroup being managed by this script
-            VerticalLayoutGroup childLayout;
-            if (!child.TryGetComponent(out childLayout) || childLayout != rowsVerticalLayoutGroup)
-            {
-                elementsCurrentlyRendered++;
-            }
-        }
-
-        return elementsCurrentlyRendered;
-    }
-
-    void UpdateContentRectTransformList()
-    {
-        contentRectTransformList.Clear();
-
-        foreach (Transform horizontalLayoutGroupTransform in rowsVerticalLayoutGroup.transform)
-        {
-            HorizontalLayoutGroup horizontalLayoutGroup = horizontalLayoutGroupTransform.GetComponent<HorizontalLayoutGroup>();
-            foreach (Transform layoutElementTransform in horizontalLayoutGroup.transform)
-            {
-                contentRectTransformList.Add(layoutElementTransform);
-            }
-        }
-
-        foreach (Transform child in contentRectTransform)
-        {
-            // only add a child if it has no VerticalLayoutGroup component
-            // if the children have VerticalLayoutGroup components...
-            // only add them if they are not the rowsVerticalLayoutGroup being managed by this script
-            VerticalLayoutGroup childLayout;
-            if (!child.TryGetComponent(out childLayout) || childLayout != rowsVerticalLayoutGroup)
-            {
-                contentRectTransformList.Add(child.transform);
-            }
-        }
-
-        //Debug.Log($"contentRectTransformElementCount: {contentRectTransformElementCount}");
-        //Debug.Log($"contentRectTransformList.Count: {contentRectTransformList.Count}");
-
-        RenderPackedLayoutGroup(contentRectTransformList);
-        LayoutRebuilder.ForceRebuildLayoutImmediate(contentRectTransform);
-        Canvas.ForceUpdateCanvases();
-    }
-
-    private void RenderPackedLayoutGroup(List<Transform> contentRectTransformList)
-    {
-        foreach (Transform child in contentRectTransformList)
-        {
-            child.SetParent(contentRectTransform);
-        }
-
-        foreach (HorizontalLayoutGroup horizontalLayoutGroup in rowsVerticalLayoutGroupList)
-        {
-            Destroy(horizontalLayoutGroup.gameObject);
-        }
-
-        rowsVerticalLayoutGroupList.Clear();
-        LayoutRebuilder.ForceRebuildLayoutImmediate(contentRectTransform);
-
-        foreach (Transform child in contentRectTransformList)
-        {
-            AddLayoutElementToPackedLayoutGroup(child, rowsVerticalLayoutGroup, rowsVerticalLayoutGroupList);
-        }
-    }
-
-    private void AddLayoutElementToPackedLayoutGroup(Transform child, VerticalLayoutGroup rowsLayoutGroup, List<HorizontalLayoutGroup> rowsLayoutGroupList)
-    {
-        HorizontalLayoutGroup lastRowInLayout;
-        
-        // get the last row in the packed layout
-        if (rowsLayoutGroupList.Count < 1)
-        {
-            lastRowInLayout = Instantiate(horizontalLayoutGroupRow, rowsLayoutGroup.transform);
-            rowsLayoutGroupList.Add(lastRowInLayout);
-        }
-        else
-        {
-            lastRowInLayout = rowsLayoutGroupList[rowsLayoutGroupList.Count - 1];
-        }
-
-        // if this is the only element in the row then add it without any restrictions
-        if (lastRowInLayout.transform.childCount == 0)
-        {
-            child.transform.SetParent(lastRowInLayout.transform, false);
-            return;
-        }
-
-        // otherwise find the total width of the row and calculate the available width from the other elements in the row
-        float rowPreferredWidth = widthLimitRectTransform.rect.width;
-        float rowAvailableWidth = rowPreferredWidth;
-        
-        foreach (Transform rowElementTransform in lastRowInLayout.transform)
-        {
-            ILayoutElement rowElement = rowElementTransform.GetComponent<ILayoutElement>();
-            rowAvailableWidth -= rowElement.preferredWidth;
-        }
-
-        // if it can fit in the current row then add it
-        ILayoutElement layoutGroup = child.GetComponent<ILayoutElement>();
-        if (layoutGroup.preferredWidth <= rowAvailableWidth)
-        {
-            child.transform.SetParent(lastRowInLayout.transform, false);
-            return;
-        }
-        // otherwise create a new row and add it there
-        else
-        {
-            lastRowInLayout = Instantiate(horizontalLayoutGroupRow, rowsLayoutGroup.transform);
-            rowsLayoutGroupList.Add(lastRowInLayout);
-            child.transform.SetParent(lastRowInLayout.transform, false);
-            return;
-        }
     }
 }
