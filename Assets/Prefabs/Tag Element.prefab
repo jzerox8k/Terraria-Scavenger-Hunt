@@ -65,8 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Some Really Really Really Really Really Really Really Really Really Long
-    Tag Text '
+  m_text: 'Some Really Long Tag Text '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: cb8b8d53c9275fd44ae9303e09d56044, type: 2}
   m_sharedMaterial: {fileID: 343931249678966782, guid: cb8b8d53c9275fd44ae9303e09d56044, type: 2}
@@ -431,14 +430,14 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7774613815554362694}
   - {fileID: 4167573428470754115}
+  - {fileID: 7774613815554362694}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 20}
+  m_SizeDelta: {x: 200, y: 20}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &8203600232097410421
 CanvasRenderer:
