@@ -10,6 +10,7 @@ namespace TerrariaAssets
 {
     public class ItemData
     {
+        public string pageurl { get; set; }
         public string _pageName { get; set; }
         public int itemid { get; set; }
         public string name { get; set; }
@@ -59,5 +60,61 @@ namespace TerrariaAssets
         public bool? japanese { get; set; }
         public string Exclusive_pageName { get; set; }
         public Sprite sprite { get; set; }
+
+        public ItemData() { }
+
+        public ItemData(ItemData itemData)
+        {
+            pageurl = itemData.pageurl;
+            _pageName = itemData._pageName;
+            itemid = itemData.itemid;
+            name = itemData.name;
+            internalname = itemData.internalname;
+            image = itemData.image;
+            imagefile = itemData.imagefile;
+            imageplaced = itemData.imageplaced;
+            imageequipped = itemData.imageequipped;
+            autoswing = itemData.autoswing;
+            stack = itemData.stack;
+            consumable = itemData.consumable;
+            hardmode = itemData.hardmode;
+            type = itemData.type;
+            listcat = itemData.listcat;
+            tag = itemData.tag;
+            damage = itemData.damage;
+            damagetype = itemData.damagetype;
+            defense = itemData.defense;
+            velocity = itemData.velocity;
+            knockback = itemData.knockback;
+            research = itemData.research;
+            rare = itemData.rare;
+            buy = itemData.buy;
+            sell = itemData.sell;
+            axe = itemData.axe;
+            pick = itemData.pick;
+            hammer = itemData.hammer;
+            fishing = itemData.fishing;
+            bait = itemData.bait;
+            bonus = itemData.bonus;
+            toolspeed = itemData.toolspeed;
+            usetime = itemData.usetime;
+            unobtainable = itemData.unobtainable;
+            critical = itemData.critical;
+            tooltip = itemData.tooltip;
+            placeable = itemData.placeable;
+            placedwidth = itemData.placedwidth;
+            placedheight = itemData.placedheight;
+            mana = itemData.mana;
+            hheal = itemData.hheal;
+            mheal = itemData.mheal;
+            bodyslot = itemData.bodyslot;
+            buffs = itemData.buffs;
+            debuffs = itemData.debuffs;
+            desktop = itemData.desktop;
+            oldgen = itemData.oldgen;
+            japanese = itemData.japanese;
+            Exclusive_pageName = itemData.Exclusive_pageName;
+            sprite = itemData.sprite;
+        }
     }
 }

@@ -8,4 +8,9 @@ using TerrariaAssets;
 public class FilterableItemData : ItemData
 {
     public bool isFiltered { get; set; }
+
+    public FilterableItemData(ItemData itemData) : base(itemData)
+    {
+        isFiltered = true;
+    }
 }

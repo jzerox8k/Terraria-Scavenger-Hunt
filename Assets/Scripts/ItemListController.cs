@@ -20,11 +20,11 @@ public class ItemListController : MonoBehaviour
     private void Start()
     {
         Verify();
+        Debug.Log(itemDataFile.text);
 
         // get item data from assets
         Dictionary<int, ItemData> itemJsonData = JsonConvert.DeserializeObject<Dictionary<int, ItemData>>(itemDataFile.text);
 
-        Debug.Log(itemDataFile.text);
         Debug.Log($"{itemJsonData.Count} items found and parsed");
 
         // remove unobtainable items

@@ -18,6 +18,8 @@ public class RecycleItemGridContent : MonoBehaviour
 
     public List<ItemFilterElement> items = new List<ItemFilterElement>();
 
+    public FilterableDataset datasetItems;
+
     public Vector2 viewportDimensions = new Vector2();
     public Vector2 contentDimensions = new Vector2();
     public Vector2Int viewportDimensionsInCells = new Vector2Int();
@@ -58,7 +60,9 @@ public class RecycleItemGridContent : MonoBehaviour
 
         yield return new WaitForEndOfFrame();
 
-        indexRangeBeingRendered = GetFirstAndLastIndicesToRender(scrollbar.value, viewportDimensionsInCells, ItemDataset.Instance);
+        datasetItems = new FilterableDataset(ItemDataset.Instance);
+
+        indexRangeBeingRendered = GetFirstAndLastIndicesToRender(scrollbar.value, viewportDimensionsInCells, datasetItems);
 
         RenderAndPadGridLayout(indexRangeBeingRendered);
     }
@@ -69,7 +73,7 @@ public class RecycleItemGridContent : MonoBehaviour
         {
             ////Debug.Log($"viewportRectTransform has changed");
             UpdateViewportDimensions();
-            UpdateContentRectDimensions(ItemDataset.Instance);
+            //UpdateContentRectDimensions(datasetItems);
             viewportRectTransform.hasChanged = false;
 
             OnScroll(scrollbar.value);
@@ -78,7 +82,7 @@ public class RecycleItemGridContent : MonoBehaviour
     public void OnScroll(float eventData)
     {
         // compare current first index to render with the first index already rendered
-        (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(eventData, viewportDimensionsInCells, ItemDataset.Instance);
+        (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(eventData, viewportDimensionsInCells, datasetItems);
         ////Debug.Log($"indexRangeToRender: {indexRangeToRender}");
 
         // if they are different
@@ -151,11 +155,11 @@ public class RecycleItemGridContent : MonoBehaviour
     {
         // re-render the grid and adjust padding accordingly
         ////Debug.Log($"indexRangeBeingRendered: {indexRangeBeingRendered}");
-        RenderRecycledGrid(indexRangeBeingRendered, contentGridLayoutGroup, ItemDataset.Instance);
+        RenderRecycledGrid(indexRangeBeingRendered, contentGridLayoutGroup, datasetItems);
 
         // pad the rows before the first rendered index
         int rowsToPadBefore = GetRowsToPadBeforeFirstIndex(indexRangeBeingRendered.Item1, viewportDimensionsInCells.x);
-        int rowsToPadAfter = GetRowsToPadAfterLastIndex(indexRangeBeingRendered.Item2, viewportDimensionsInCells.x, ItemDataset.Instance.GetItemCount());
+        int rowsToPadAfter = GetRowsToPadAfterLastIndex(indexRangeBeingRendered.Item2, viewportDimensionsInCells.x, datasetItems.GetItemCount());
 
         ////Debug.Log($"rowsToPadBefore: {rowsToPadBefore}");
         ////Debug.Log($"rowsToPadAfter: {rowsToPadAfter}");
