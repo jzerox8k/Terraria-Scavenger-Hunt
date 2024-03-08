@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace TerrariaAssets
 {
-    public class ItemData
+    public class TerrariaItemData
     {
         public string pageurl { get; set; }
         public string _pageName { get; set; }
@@ -61,9 +61,9 @@ namespace TerrariaAssets
         public string Exclusive_pageName { get; set; }
         public Sprite sprite { get; set; }
 
-        public ItemData() { }
+        public TerrariaItemData() { }
 
-        public ItemData(ItemData itemData)
+        public TerrariaItemData(TerrariaItemData itemData)
         {
             pageurl = itemData.pageurl;
             _pageName = itemData._pageName;

@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using TerrariaAssets;
 
-public class FilterableItemData : ItemData
+public class FilterableItemData : TerrariaItemData
 {
     public bool isFiltered { get; set; }
 
-    public FilterableItemData(ItemData itemData) : base(itemData)
+    public FilterableItemData(TerrariaItemData itemData) : base(itemData)
     {
         isFiltered = true;
     }

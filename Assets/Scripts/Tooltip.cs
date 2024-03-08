@@ -25,7 +25,7 @@ public class Tooltip : MonoBehaviour
         //Debug.Log($"canvasRectTransform: {canvasRectTransform.rect.position} {canvasRectTransform.rect.size}");
     }
 
-    public void SetItemInfoTabText(ItemData itemData)
+    public void SetItemInfoTabText(TerrariaItemData itemData)
     {
         itemName.text = itemData.name;
         itemTooltip.text = itemData.tooltip;
@@ -49,7 +49,7 @@ public class Tooltip : MonoBehaviour
         ResizeTMP_Text(itemTooltip);
     }
 
-    private void _ShowTooltip(ItemData itemData)
+    private void _ShowTooltip(TerrariaItemData itemData)
     {
         SetItemInfoTabText(itemData);
         //Debug.Log($"{itemName.text} is hovered");
@@ -91,7 +91,7 @@ public class Tooltip : MonoBehaviour
 
     }
 
-    public static void ShowTooltip(ItemData itemData)
+    public static void ShowTooltip(TerrariaItemData itemData)
     {
         Instance._ShowTooltip(itemData);
     }

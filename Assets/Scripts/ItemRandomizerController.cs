@@ -10,8 +10,9 @@ public class ItemRandomizerController : MonoBehaviour
     public Button shuffle;
 
     List<int> itemIdsAll;
+    Dictionary<int, TerrariaItemData> gridItemDataset;
 
-    List<ItemData> itemData;
+    List<TerrariaItemData> itemData;
     List<ItemGridElement> itemGridElements;
 
     public SeedDisplay seedDisplay;
@@ -22,13 +23,15 @@ public class ItemRandomizerController : MonoBehaviour
     void Awake()
     {
         itemGridElements = new List<ItemGridElement>();
-        itemData = new List<ItemData>();
-        ItemListController.OnDatasetLoaded += OnDatasetLoaded;
+        itemData = new List<TerrariaItemData>();
+        ItemLibraryController.OnDatasetLoaded += OnDatasetLoaded;
+        gridItemDataset = new Dictionary<int, TerrariaItemData>();
     }
 
     public void OnDatasetLoaded()
     {
-        itemIdsAll = ItemDataset.Instance.Items.Keys.ToList();
+        gridItemDataset = new(TerrariaItemDataset.Instance.Items);
+        itemIdsAll = TerrariaItemDataset.Instance.Items.Keys.ToList();
 
         foreach (Transform child in transform)
         {
@@ -43,6 +46,12 @@ public class ItemRandomizerController : MonoBehaviour
         RandomizeItems();
     }
 
+    public void OnDatasetRefresh(Dictionary<int, TerrariaItemData> newItems)
+    {
+        itemIdsAll = newItems.Keys.ToList();
+        gridItemDataset = new(newItems);
+    }
+
     public void RandomizeItems()
     {
         List<int> randomItemIds = itemIdsAll.ConvertAll(x => x);
@@ -52,7 +61,7 @@ public class ItemRandomizerController : MonoBehaviour
         {
             int r = Random.Range(0, randomItemIds.Count);
             int itemid = randomItemIds[r];
-            itemData.Add(ItemDataset.Instance.Items[itemid]);
+            itemData.Add(TerrariaItemDataset.Instance.Items[itemid]);
             randomItemIds.Remove(itemid);
         }
 
@@ -61,7 +70,7 @@ public class ItemRandomizerController : MonoBehaviour
 
     public void ShuffleItems()
     {
-        List<ItemData> items = itemData.ConvertAll(x => x);
+        List<TerrariaItemData> items = itemData.ConvertAll(x => x);
         itemData.Clear();
 
         for (int i = 0; i < MaxItems; i++)
@@ -79,9 +88,9 @@ public class ItemRandomizerController : MonoBehaviour
         for (int i = 0; i < itemData.Count; i++)
         {
             ItemGridElement elem = itemGridElements[i];
-            ItemData data = itemData[i];
+            TerrariaItemData data = itemData[i];
             elem.itemData = data;
-            elem.itemImage.sprite = ItemDataset.Instance.Items[data.itemid].sprite;
+            elem.itemImage.sprite = TerrariaItemDataset.Instance.Items[data.itemid].sprite;
             elem.itemImage.SetNativeSize();
         }
 
@@ -95,10 +104,10 @@ public class ItemRandomizerController : MonoBehaviour
         seedDisplay.seedTextValue.text = GenerateSeedFromItemList(itemData);
     }
 
-    public string GenerateSeedFromItemList(List<ItemData> itemList)
+    public string GenerateSeedFromItemList(List<TerrariaItemData> itemList)
     {
         string seed = "";
-        foreach (ItemData item in itemList)
+        foreach (TerrariaItemData item in itemList)
         {
             string itemSeedString = ConvertItemIdToAlphaNumCode(item.itemid);
             //Debug.Log($"itemSeedString: {itemSeedString}");
@@ -187,7 +196,7 @@ public class ItemRandomizerController : MonoBehaviour
 
         for (int i = 0; i < MaxItems; i++)
         {
-            itemData[i] = ItemDataset.Instance.Items[result[i]];
+            itemData[i] = TerrariaItemDataset.Instance.Items[result[i]];
         }
 
         DisplayItems();

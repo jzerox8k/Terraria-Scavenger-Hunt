@@ -34,7 +34,7 @@ public class RecycleItemGridContent : MonoBehaviour
     private void Awake()
     {
         ////Debug.Log($"subscribing to event ItemListController.OnDatasetLoaded");
-        ItemListController.OnDatasetLoaded += OnDatasetLoaded;
+        ItemLibraryController.OnDatasetLoaded += OnDatasetLoaded;
     }
 
     private void OnDatasetLoaded()
@@ -51,8 +51,6 @@ public class RecycleItemGridContent : MonoBehaviour
         UpdateGridAndCellDimensions();
         UpdateViewportDimensions();
 
-        scrollbar.onValueChanged.AddListener(OnScroll);
-
         foreach (Transform child in contentRectTransform.transform)
         {
             Destroy(child.gameObject);
@@ -60,11 +58,13 @@ public class RecycleItemGridContent : MonoBehaviour
 
         yield return new WaitForEndOfFrame();
 
-        datasetItems = new FilterableDataset(ItemDataset.Instance);
+        datasetItems = new FilterableDataset(TerrariaItemDataset.Instance);
 
         indexRangeBeingRendered = GetFirstAndLastIndicesToRender(scrollbar.value, viewportDimensionsInCells, datasetItems);
 
         RenderAndPadGridLayout(indexRangeBeingRendered);
+
+        scrollbar.onValueChanged.AddListener(OnScroll);
     }
 
     private void Update()

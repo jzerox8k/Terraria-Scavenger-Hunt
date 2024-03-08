@@ -9,7 +9,7 @@ using System.Linq;
 
 using PolyAndCode.UI;
 
-public class ItemListController : MonoBehaviour
+public class ItemLibraryController : MonoBehaviour
 {
     public Transform content;
     public TextAsset itemDataFile;
@@ -19,11 +19,16 @@ public class ItemListController : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        Verify();
+        // get the content transform if it isn't assigned from the editor
+        if (content == null)
+        {
+            content = transform.Find("Content");
+        }
+
         Debug.Log(itemDataFile.text);
 
         // get item data from assets
-        Dictionary<int, ItemData> itemJsonData = JsonConvert.DeserializeObject<Dictionary<int, ItemData>>(itemDataFile.text);
+        Dictionary<int, TerrariaItemData> itemJsonData = JsonConvert.DeserializeObject<Dictionary<int, TerrariaItemData>>(itemDataFile.text);
 
         Debug.Log($"{itemJsonData.Count} items found and parsed");
 
@@ -32,7 +37,7 @@ public class ItemListController : MonoBehaviour
 
         Debug.Log($"{itemJsonData.Count} items found after removing unobtainable items");
 
-        foreach (ItemData itemData in itemJsonData.Values)
+        foreach (TerrariaItemData itemData in itemJsonData.Values)
         {
             // retrieve the image for the item from the assets and insert it into the image dataset
             string path = "Image Data/" + itemData.imagefile.Split(".")[0];
@@ -40,7 +45,7 @@ public class ItemListController : MonoBehaviour
             itemJsonData[itemData.itemid].sprite = sprite;
 
             // insert the item list element into the item dataset
-            ItemDataset.Instance.Items.Add(itemData.itemid, itemData);
+            TerrariaItemDataset.Instance.Items.Add(itemData.itemid, itemData);
         }
 
         // update the randomizer controller
@@ -51,14 +56,6 @@ public class ItemListController : MonoBehaviour
     private void Awake()
     {
         
-    }
-
-    private void Verify()
-    {
-        if (content == null)
-        {
-            content = transform.Find("Content");
-        }
     }
 
     // Update is called once per frame

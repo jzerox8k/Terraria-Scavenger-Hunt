@@ -8,10 +8,10 @@ using PolyAndCode.UI;
 
 namespace TerrariaAssets
 {
-    public class ItemDataset : IRecyclableScrollRectDataSource
+    public class TerrariaItemDataset : IRecyclableScrollRectDataSource
     {
-        public static ItemDataset Instance = new ItemDataset();
-        public Dictionary<int, ItemData> Items = new Dictionary<int, ItemData>();
+        public static TerrariaItemDataset Instance = new TerrariaItemDataset();
+        public Dictionary<int, TerrariaItemData> Items = new Dictionary<int, TerrariaItemData>();
 
         public int GetItemCount()
         {

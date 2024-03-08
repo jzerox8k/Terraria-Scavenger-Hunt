@@ -16,7 +16,7 @@ public class ItemFilter
         ItemTag,
     }
 
-    public delegate bool FilterExpression(ItemData itemData, string queryParameter);
+    public delegate bool FilterExpression(TerrariaItemData itemData, string queryParameter);
 
     /* FIELDS AND PROPERTIES */
     public FilterType filterType;
@@ -57,12 +57,12 @@ public class ItemFilter
         }
     }
 
-    public bool FilterByItemId(ItemData itemData, string queryParameter)
+    public bool FilterByItemId(TerrariaItemData itemData, string queryParameter)
     {
         return itemData.itemid.ToString().Contains(queryParameter);
     }
 
-    public bool FilterByTag(ItemData itemData, string queryParameter)
+    public bool FilterByTag(TerrariaItemData itemData, string queryParameter)
     {
         return 
             itemData.tag.Contains(queryParameter) ||
@@ -76,16 +76,9 @@ public class FilterableDataset : IRecyclableScrollRectDataSource
     public Dictionary<int, FilterableItemData> ItemDatabase = new Dictionary<int, FilterableItemData>();
     public Dictionary<int, FilterableItemData> filteredItemDataset = new Dictionary<int, FilterableItemData>();
 
-    ItemFilter itemIdFilter = new ItemFilter(ItemFilter.FilterType.ItemId);
-    ItemFilter itemNameFilter = new ItemFilter(ItemFilter.FilterType.ItemName);
-    ItemFilter itemNameOrTooltipFilter = new ItemFilter(ItemFilter.FilterType.ItemNameOrTooltip);
-    List<ItemFilter> itemTagFilterList = new List<ItemFilter>();
+    List<ItemFilter> itemFilters = new List<ItemFilter>();
 
-    ItemFilter.FilterType currentFilterType;
-
-    string searchParameter;
-
-    public FilterableDataset(ItemDataset itemDataset)
+    public FilterableDataset(TerrariaItemDataset itemDataset)
     {
         ItemDatabase = itemDataset.Items.ToDictionary(item => item.Key, item => new FilterableItemData(item.Value));
         filteredItemDataset = ItemDatabase;
@@ -102,35 +95,8 @@ public class FilterableDataset : IRecyclableScrollRectDataSource
         itemListElement.ConfigureElement(filteredItemDataset.Values.ToList()[index]);
     }
 
-    public void ApplyFilters()
+    public void CreateAndAddNewFilter(ItemFilter itemfilter)
     {
-        switch (currentFilterType)
-        {
-            case ItemFilter.FilterType.ItemId:
-                filteredItemDataset = ApplyFilter(ItemDatabase, itemIdFilter);                
-                break;
-            case ItemFilter.FilterType.ItemName:
-                filteredItemDataset = ApplyFilter(ItemDatabase, itemNameFilter);
-                break;
-            case ItemFilter.FilterType.ItemNameOrTooltip:
-                filteredItemDataset = ApplyFilter(ItemDatabase, itemNameOrTooltipFilter);
-                break;
-            case ItemFilter.FilterType.ItemTag:
-                filteredItemDataset = ItemDatabase;
-                foreach (ItemFilter itemTagFilter in itemTagFilterList)
-                {
-                    filteredItemDataset = ApplyFilter(filteredItemDataset, itemTagFilter);
-                }
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(currentFilterType));
-        }
-    }
-
-    public Dictionary<int, FilterableItemData> ApplyFilter(Dictionary<int, FilterableItemData> dataset, ItemFilter itemFilter)
-    {
-        return dataset
-            .Where(p => itemFilter.filterExpression(p.Value, searchParameter))
-            .ToDictionary(p => p.Key, p => p.Value);
+        itemFilters.Add(itemfilter);
     }
 }

@@ -23,7 +23,7 @@ public interface IRecyclableScrollRectDataSource
 public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler, IRecyclableScrollRectContentElement
 {
     public Image itemImage;
-    public ItemData itemData;
+    public TerrariaItemData itemData;
     public RectTransform itemRectTransform;
     private bool hovered;
 
@@ -36,8 +36,8 @@ public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        Tooltip.HideTooltip();
         hovered = false;
+        Tooltip.HideTooltip();
     }
 
     public void OnPointerMove(PointerEventData eventData)
@@ -48,7 +48,7 @@ public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExit
         }
     }
 
-    public void ConfigureElement(ItemData itemDataConfiguration)
+    public void ConfigureElement(TerrariaItemData itemDataConfiguration)
     {
         this.itemData = itemDataConfiguration;
         itemImage.sprite = itemDataConfiguration.sprite;
