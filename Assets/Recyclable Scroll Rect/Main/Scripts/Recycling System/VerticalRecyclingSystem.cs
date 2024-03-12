@@ -341,7 +341,7 @@ namespace PolyAndCode.UI
             if (IsGrid)
             {
                 Content.sizeDelta += additionalRows * Vector2.up * _cellHeight;
-                //TODOL : check if it is supposed to be done only when > 0
+                //TODO : check if it is supposed to be done only when > 0
                 if (additionalRows > 0)
                 {
                     n -= additionalRows;

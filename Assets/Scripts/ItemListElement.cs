@@ -1,26 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TerrariaAssets;
 
-public interface IRecyclableScrollRectContentElement
+public abstract class RecyclableScrollRectContentElement : MonoBehaviour
+{
+    public abstract void ConfigureElement(IElementConfiguration elementConfiguration); 
+}
+
+public interface IElementConfiguration
 {
 
 }
 
 public interface IRecyclableScrollRectDataSource
 {
-    public abstract void SetContentElementData(IRecyclableScrollRectContentElement element, int index);
+    public abstract void SetContentElementData(RecyclableScrollRectContentElement element, int index);
 
     public abstract int GetItemCount();
 }
 
-public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler, IRecyclableScrollRectContentElement
+public class ItemListElement : 
+    RecyclableScrollRectContentElement,
+    IPointerEnterHandler, 
+    IPointerExitHandler, 
+    IPointerMoveHandler
 {
     public Image itemImage;
     public TerrariaItemData itemData;
@@ -48,10 +52,13 @@ public class ItemListElement : MonoBehaviour, IPointerEnterHandler, IPointerExit
         }
     }
 
-    public void ConfigureElement(TerrariaItemData itemDataConfiguration)
+    public override void ConfigureElement(IElementConfiguration itemDataConfiguration)
     {
-        this.itemData = itemDataConfiguration;
-        itemImage.sprite = itemDataConfiguration.sprite;
-        itemImage.SetNativeSize();
+        if (itemDataConfiguration is TerrariaItemData item)
+        {
+            this.itemData = item;
+            itemImage.sprite = item.sprite;
+            itemImage.SetNativeSize();
+        }
     }
 }

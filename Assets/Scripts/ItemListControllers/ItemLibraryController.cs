@@ -48,19 +48,7 @@ public class ItemLibraryController : MonoBehaviour
             TerrariaItemDataset.Instance.Items.Add(itemData.itemid, itemData);
         }
 
-        // update the randomizer controller
         Debug.Log($"about to invoke OnDatasetLoaded event Action");
         OnDatasetLoaded.Invoke();
-    }
-
-    private void Awake()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

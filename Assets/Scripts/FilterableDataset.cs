@@ -89,7 +89,7 @@ public class FilterableDataset : IRecyclableScrollRectDataSource
         return filteredItemDataset.Where(x => x.Value.isFiltered).Count();
     }
 
-    public void SetContentElementData(IRecyclableScrollRectContentElement element, int index)
+    public void SetContentElementData(RecyclableScrollRectContentElement element, int index)
     {
         ItemListElement itemListElement = element as ItemListElement;
         itemListElement.ConfigureElement(filteredItemDataset.Values.ToList()[index]);

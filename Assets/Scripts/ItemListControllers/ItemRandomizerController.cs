@@ -24,14 +24,8 @@ public class ItemRandomizerController : MonoBehaviour
     {
         itemGridElements = new List<ItemGridElement>();
         itemData = new List<TerrariaItemData>();
-        ItemLibraryController.OnDatasetLoaded += OnDatasetLoaded;
+        SelectedItemListController.OnSelectedItemsChanged += OnDatasetRefresh;
         gridItemDataset = new Dictionary<int, TerrariaItemData>();
-    }
-
-    public void OnDatasetLoaded()
-    {
-        gridItemDataset = new(TerrariaItemDataset.Instance.Items);
-        itemIdsAll = TerrariaItemDataset.Instance.Items.Keys.ToList();
 
         foreach (Transform child in transform)
         {
@@ -42,14 +36,13 @@ public class ItemRandomizerController : MonoBehaviour
         }
 
         Debug.Log($"{itemGridElements.Count} grid elements found");
-
-        RandomizeItems();
     }
 
-    public void OnDatasetRefresh(Dictionary<int, TerrariaItemData> newItems)
+    public void OnDatasetRefresh()
     {
-        itemIdsAll = newItems.Keys.ToList();
-        gridItemDataset = new(newItems);
+        gridItemDataset = new(SelectedItemListController.SelectedItems);
+        itemIdsAll = gridItemDataset.Keys.ToList();
+        RandomizeItems();
     }
 
     public void RandomizeItems()

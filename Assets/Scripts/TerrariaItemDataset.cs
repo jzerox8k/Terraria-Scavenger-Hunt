@@ -18,7 +18,7 @@ namespace TerrariaAssets
             return Instance.Items.Count;
         }
 
-        public void SetContentElementData(IRecyclableScrollRectContentElement element, int index)
+        public void SetContentElementData(RecyclableScrollRectContentElement element, int index)
         {
             ItemListElement itemListElement = element as ItemListElement;
             itemListElement.ConfigureElement(Instance.Items.Values.ToList()[index]);

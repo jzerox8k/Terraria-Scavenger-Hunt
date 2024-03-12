@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace TerrariaAssets
 {
-    public class TerrariaItemData
+    public class TerrariaItemData : IElementConfiguration
     {
         public string pageurl { get; set; }
         public string _pageName { get; set; }

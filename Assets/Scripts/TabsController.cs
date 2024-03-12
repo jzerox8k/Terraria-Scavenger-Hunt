@@ -10,10 +10,12 @@ public class TabsController : MonoBehaviour
 
     private void Awake()
     {
-        library.SetActive(true);
-        filters.SetActive(true);
+        SelectedItemListController.OnSelectedItemsChanged += OnDatasetLoaded;
+    }
 
-        selected.SetActive(false);
+    private void OnDatasetLoaded()
+    {
+        OpenLibrary();
     }
 
     public void OpenLibrary()
