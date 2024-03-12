@@ -1,35 +1,53 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using TerrariaAssets;
 using System;
+using System.Threading;
+using UnityEngine;
 
-public class SelectedItemListController : MonoBehaviour
+public class SelectedItemListController
+    : MonoBehaviour,
+        IRecyclableScrollRectDataSource
 {
-    public static Dictionary<int, TerrariaItemData> SelectedItems = new Dictionary<int, TerrariaItemData>();
+    TerrariaItemDataSource SelectedItems;
 
-    public static event Action OnSelectedItemsChanged;
+    public ITerrariaDictionaryDataSource DataSourceEvents;
+
+    public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceChanged;
+    public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceLoaded;
 
     // Start is called before the first frame update
-    void Start()
-    {
-
-    }
+    void Start() { }
 
     private void Awake()
     {
-        ItemLibraryController.OnDatasetLoaded += OnDatasetLoaded;
+        DataSourceEvents.OnDictionaryDataSourceChanged +=
+            OnSelectedDataSourceLoaded;
     }
 
-    private void OnDatasetLoaded()
+    private void OnSelectedDataSourceLoaded(
+        ITerrariaDictionaryDataSource.EventArguments arguments
+    )
     {
-        SelectedItems = new(TerrariaItemDataset.Instance.Items);
-        OnSelectedItemsChanged.Invoke();
+        SelectedItems = new(arguments.DataSource.Data);
+        OnDataSourceLoaded.Invoke(new(SelectedItems));
     }
 
-    public void ReplaceSelectedItems(Dictionary<int, TerrariaItemData> newSelectedItems)
+    public void OnSelectedDataSourceChanged(
+        ITerrariaDictionaryDataSource.EventArguments arguments
+    )
     {
-        SelectedItems = new(newSelectedItems);
-        OnSelectedItemsChanged.Invoke();
+        SelectedItems = new(arguments.DataSource.Data);
+        OnDataSourceChanged.Invoke(new(SelectedItems));
+    }
+
+    public void SetContentElementData(
+        RecyclableScrollRectContentElement element,
+        int index
+    )
+    {
+        throw new NotImplementedException();
+    }
+
+    public int GetItemCount()
+    {
+        throw new NotImplementedException();
     }
 }

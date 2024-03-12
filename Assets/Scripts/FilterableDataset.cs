@@ -16,7 +16,10 @@ public class ItemFilter
         ItemTag,
     }
 
-    public delegate bool FilterExpression(TerrariaItemData itemData, string queryParameter);
+    public delegate bool FilterExpression(
+        TerrariaItemData itemData,
+        string queryParameter
+    );
 
     /* FIELDS AND PROPERTIES */
     public FilterType filterType;
@@ -34,13 +37,15 @@ public class ItemFilter
 
             case FilterType.ItemName:
                 filterExpression = (itemData, queryParameter) =>
-                itemData.name.Contains(queryParameter);
+                    itemData.name.Contains(queryParameter);
                 break;
 
             case FilterType.ItemNameOrTooltip:
-                filterExpression = (itemData, queryParameter) => (
-                itemData.name.Contains(queryParameter) ||
-                itemData.tooltip.Contains(queryParameter));
+                filterExpression = (itemData, queryParameter) =>
+                    (
+                        itemData.name.Contains(queryParameter)
+                        || itemData.tooltip.Contains(queryParameter)
+                    );
                 break;
 
             case FilterType.ItemTag:
@@ -53,7 +58,8 @@ public class ItemFilter
 
         if (negateFilter)
         {
-            filterExpression = (itemData, queryParameter) => !filterExpression(itemData, queryParameter);
+            filterExpression = (itemData, queryParameter) =>
+                !filterExpression(itemData, queryParameter);
         }
     }
 
@@ -64,23 +70,27 @@ public class ItemFilter
 
     public bool FilterByTag(TerrariaItemData itemData, string queryParameter)
     {
-        return 
-            itemData.tag.Contains(queryParameter) ||
-            itemData.listcat.Contains(queryParameter) ||
-            itemData.type.Contains(queryParameter);
+        return itemData.tag.Contains(queryParameter)
+            || itemData.listcat.Contains(queryParameter)
+            || itemData.type.Contains(queryParameter);
     }
 }
 
 public class FilterableDataset : IRecyclableScrollRectDataSource
 {
-    public Dictionary<int, FilterableItemData> ItemDatabase = new Dictionary<int, FilterableItemData>();
-    public Dictionary<int, FilterableItemData> filteredItemDataset = new Dictionary<int, FilterableItemData>();
+    public Dictionary<int, FilterableItemData> ItemDatabase =
+        new Dictionary<int, FilterableItemData>();
+    public Dictionary<int, FilterableItemData> filteredItemDataset =
+        new Dictionary<int, FilterableItemData>();
 
     List<ItemFilter> itemFilters = new List<ItemFilter>();
 
-    public FilterableDataset(TerrariaItemDataset itemDataset)
+    public FilterableDataset(TerrariaAssets.TerrariaItemDataSource itemDataset)
     {
-        ItemDatabase = itemDataset.Items.ToDictionary(item => item.Key, item => new FilterableItemData(item.Value));
+        ItemDatabase = itemDataset.Items.ToDictionary(
+            item => item.Key,
+            item => new FilterableItemData(item.Value)
+        );
         filteredItemDataset = ItemDatabase;
     }
 
@@ -89,10 +99,15 @@ public class FilterableDataset : IRecyclableScrollRectDataSource
         return filteredItemDataset.Where(x => x.Value.isFiltered).Count();
     }
 
-    public void SetContentElementData(RecyclableScrollRectContentElement element, int index)
+    public void SetContentElementData(
+        RecyclableScrollRectContentElement element,
+        int index
+    )
     {
         ItemListElement itemListElement = element as ItemListElement;
-        itemListElement.ConfigureElement(filteredItemDataset.Values.ToList()[index]);
+        itemListElement.ConfigureElement(
+            filteredItemDataset.Values.ToList()[index]
+        );
     }
 
     public void CreateAndAddNewFilter(ItemFilter itemfilter)

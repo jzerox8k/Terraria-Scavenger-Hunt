@@ -9,8 +9,11 @@ public class ItemRandomizerController : MonoBehaviour
     public Button randomize;
     public Button shuffle;
 
-    List<int> itemIdsAll;
-    Dictionary<int, TerrariaItemData> gridItemDataset;
+    List<int> SelectedPoolItemIdsAll;
+    TerrariaItemDataSource GridItemDataset;
+
+    [SerializeField]
+    public ITerrariaDictionaryDataSource dataSourceEvents;
 
     List<TerrariaItemData> itemData;
     List<ItemGridElement> itemGridElements;
@@ -18,43 +21,50 @@ public class ItemRandomizerController : MonoBehaviour
     public SeedDisplay seedDisplay;
 
     public const int MaxItems = 25;
-    private const string AlphaNumericCipher = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+";
+    private const string AlphaNumericCipher =
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+";
 
     void Awake()
     {
         itemGridElements = new List<ItemGridElement>();
         itemData = new List<TerrariaItemData>();
-        SelectedItemListController.OnSelectedItemsChanged += OnDatasetRefresh;
-        gridItemDataset = new Dictionary<int, TerrariaItemData>();
+        dataSourceEvents.OnDictionaryDataSourceLoaded += OnDatasetRefresh;
+        GridItemDataset = new();
 
         foreach (Transform child in transform)
         {
             GameObject childImageGameObject = child.Find("Image").gameObject;
-            ItemGridElement itemGridElement = child.GetComponentInChildren<ItemGridElement>();
-            itemGridElement.itemImage = childImageGameObject.GetComponent<Image>();
+            ItemGridElement itemGridElement =
+                child.GetComponentInChildren<ItemGridElement>();
+            itemGridElement.itemImage =
+                childImageGameObject.GetComponent<Image>();
             itemGridElements.Add(itemGridElement);
         }
 
         Debug.Log($"{itemGridElements.Count} grid elements found");
     }
 
-    public void OnDatasetRefresh()
+    private void OnDatasetRefresh(
+        ITerrariaDictionaryDataSource.EventArguments arguments
+    )
     {
-        gridItemDataset = new(SelectedItemListController.SelectedItems);
-        itemIdsAll = gridItemDataset.Keys.ToList();
+        GridItemDataset = new(arguments.DataSource.Data);
+        SelectedPoolItemIdsAll = GridItemDataset.Data.Keys.ToList();
         RandomizeItems();
     }
 
     public void RandomizeItems()
     {
-        List<int> randomItemIds = itemIdsAll.ConvertAll(x => x);
+        List<int> randomItemIds = SelectedPoolItemIdsAll.ConvertAll(x => x);
 
         itemData.Clear();
         for (int i = 0; i < MaxItems; i++)
         {
             int r = Random.Range(0, randomItemIds.Count);
             int itemid = randomItemIds[r];
-            itemData.Add(TerrariaItemDataset.Instance.Items[itemid]);
+            itemData.Add(
+                TerrariaAssets.TerrariaItemDataSource.Instance.Items[itemid]
+            );
             randomItemIds.Remove(itemid);
         }
 
@@ -83,7 +93,11 @@ public class ItemRandomizerController : MonoBehaviour
             ItemGridElement elem = itemGridElements[i];
             TerrariaItemData data = itemData[i];
             elem.itemData = data;
-            elem.itemImage.sprite = TerrariaItemDataset.Instance.Items[data.itemid].sprite;
+            elem.itemImage.sprite = TerrariaAssets
+                .TerrariaItemDataSource
+                .Instance
+                .Items[data.itemid]
+                .sprite;
             elem.itemImage.SetNativeSize();
         }
 
@@ -156,27 +170,30 @@ public class ItemRandomizerController : MonoBehaviour
     public List<int> ParseSeed(string seed)
     {
         //Debug.Log($"seed.Length: {seed.Length}");
-        if (seed.Length != 2*MaxItems) return null;
+        if (seed.Length != 2 * MaxItems)
+            return null;
 
         List<string> list = new List<string>();
         List<int> result = new List<int>();
 
         for (int i = 0; i < MaxItems; i++)
         {
-            string s = seed.Substring(i*2, 2);
+            string s = seed.Substring(i * 2, 2);
             list.Add(s);
         }
 
         foreach (string s in list)
         {
             int id = ConvertAlphaNumCodeToItemID(s);
-            if (id < 1 || id > 5455) return null;
+            if (id < 1 || id > 5455)
+                return null;
             result.Add(id);
             //Debug.Log($"s: {s}, id: {id}");
             //Debug.Log("");
         }
 
-        if (result.Count != MaxItems) return null;
+        if (result.Count != MaxItems)
+            return null;
 
         return result;
     }
@@ -185,11 +202,14 @@ public class ItemRandomizerController : MonoBehaviour
     {
         List<int> result = ParseSeed(seed);
 
-        if (result == null) return false;
+        if (result == null)
+            return false;
 
         for (int i = 0; i < MaxItems; i++)
         {
-            itemData[i] = TerrariaItemDataset.Instance.Items[result[i]];
+            itemData[i] = TerrariaAssets.TerrariaItemDataSource.Instance.Items[
+                result[i]
+            ];
         }
 
         DisplayItems();

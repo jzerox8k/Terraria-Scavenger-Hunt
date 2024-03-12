@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,30 +8,66 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class RecycleItemGridContent : MonoBehaviour
+public class RecyclableScrollRectDataSourceEventArguments
 {
+    public IRecyclableScrollRectDataSource DataSource { get; set; }
+
+    public RecyclableScrollRectDataSourceEventArguments(
+        IRecyclableScrollRectDataSource dataSource
+    )
+    {
+        DataSource = dataSource;
+    }
+}
+
+/// <summary>
+/// A class uses to transfer data source event information beween <see cref="RecyclableItemGridLayoutGroup"/>s and the outside world.
+/// </summary>
+/// <remarks>
+/// <para>
+/// An object that emits these events should derive from this class and implement overrides for the events.
+/// </para>
+/// <para>
+/// A <see cref="RecyclableItemGridLayoutGroup"/> that subscribes to these events should have an internal member that references the object that will
+/// emit these events.
+/// </para>
+/// </remarks>
+public abstract class RecyclableScrollRectDataSourceEvents : MonoBehaviour
+{
+    /// <summary>
+    /// Used to inform subscribers that the data source they are subscribed to has changed.
+    /// </summary>
+    public abstract event Action<RecyclableScrollRectDataSourceEventArguments> OnDataSourceChanged;
+
+    /// <summary>
+    /// Used to inform subscribers that the data source they are subscribed to has been loaded.
+    /// </summary>
+    public abstract event Action<RecyclableScrollRectDataSourceEventArguments> OnDataSourceLoaded;
+}
+
+public class RecyclableItemGridLayoutGroup : MonoBehaviour
+{
+    // These objects are to be populated in the editor.
     public RectTransform viewportRectTransform;
     public RectTransform contentRectTransform;
     public GridLayoutGroup contentGridLayoutGroup;
     public GameObject itemListElementPrefab;
     public Scrollbar scrollbar;
+    public RecyclableScrollRectDataSourceEvents dataSourceEvents;
 
-    public List<RecyclableScrollRectContentElement> items =
+    // These objects are internal to the implementation of the RecycleItemGridContent class.
+    private List<RecyclableScrollRectContentElement> RecyclableScrollRectItems =
         new List<RecyclableScrollRectContentElement>();
+    private IRecyclableScrollRectDataSource Datasource;
 
-    public IRecyclableScrollRectDataSource datasource;
-
-    public Vector2 viewportDimensions = new Vector2();
-    public Vector2 contentDimensions = new Vector2();
-    public Vector2Int viewportDimensionsInCells = new Vector2Int();
-
-    // TODO: The TabsController sets this script is attached to inactive.
-    // We need better event handling to make sure the grid is populated before this object is deactivated.
+    public Vector2 ViewportDimensions = new Vector2();
+    public Vector2 ContentDimensions = new Vector2();
+    public Vector2Int ViewportDimensionsInCells = new Vector2Int();
 
     // TODO: Rework the dataset loading events across all classes that use them.
 
-    // TODO: we don't need to update the cell dimensions and spacing on every frame update
-    // but if we want to make them resizeable in the future we will need to listen to a UI event
+    // TODO: We don't need to update the cell dimensions and spacing on every frame update.
+    // If we want to make them resizeable in the future we will need to listen to a UI event.
     public Vector2 cellDimensions = new Vector2();
     public Vector2 cellSpacing = new Vector2();
 
@@ -38,41 +75,63 @@ public class RecycleItemGridContent : MonoBehaviour
 
     private void Awake()
     {
-        SelectedItemListController.OnSelectedItemsChanged += OnDatasetLoaded;
+        dataSourceEvents.OnDataSourceLoaded += OnDatasetLoaded;
+        dataSourceEvents.OnDataSourceChanged += OnDataSourceChanged;
     }
 
-    private void OnDatasetLoaded()
+    public void OnDatasetLoaded(
+        RecyclableScrollRectDataSourceEventArguments DataSourceEventArguments
+    )
     {
-        StartCoroutine(DestroyContentChildrenAndInitializeScrollRect());
+        Datasource = DataSourceEventArguments.DataSource;
+
+        StartCoroutine(InitializeScrollRect());
     }
 
-    IEnumerator DestroyContentChildrenAndInitializeScrollRect()
+    public void OnDataSourceChanged(
+        RecyclableScrollRectDataSourceEventArguments DataSourceEventArguments
+    )
     {
+        Datasource = DataSourceEventArguments.DataSource;
+
+        RenderScrollRect();
+    }
+
+    IEnumerator InitializeScrollRect()
+    {
+        // This forces the grid to render once, so any initial formatting
+        // occurs first.
         Canvas.ForceUpdateCanvases();
 
-        // update the grid and cell dimension information so we can calculate viewport grid conversions
+        // Update the grid and cell dimension information so we can calculate
+        // viewport-to-grid dimension conversions.
         UpdateGridAndCellDimensions();
         UpdateViewportDimensions();
 
+        // Clear any existing elements from the editor. These will be filled
+        // in from the dataset provided.
         foreach (Transform child in contentRectTransform.transform)
         {
             Destroy(child.gameObject);
         }
 
+        // Destroy takes a frame of time to remove GameObjects.
         yield return new WaitForEndOfFrame();
 
-        // update the dataset items
-        datasource = new FilterableDataset(TerrariaItemDataset.Instance);
+        RenderScrollRect();
 
+        scrollbar.onValueChanged.AddListener(OnScroll);
+    }
+
+    private void RenderScrollRect()
+    {
         indexRangeBeingRendered = GetFirstAndLastIndicesToRender(
             scrollbar.value,
-            viewportDimensionsInCells,
-            datasource
+            ViewportDimensionsInCells,
+            Datasource
         );
 
         RenderAndPadGridLayout(indexRangeBeingRendered);
-
-        scrollbar.onValueChanged.AddListener(OnScroll);
     }
 
     private void Update()
@@ -92,8 +151,8 @@ public class RecycleItemGridContent : MonoBehaviour
         // compare current first index to render with the first index already rendered
         (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(
             eventData,
-            viewportDimensionsInCells,
-            datasource
+            ViewportDimensionsInCells,
+            Datasource
         );
         if (indexRangeBeingRendered != indexRangeToRender)
         {
@@ -104,9 +163,9 @@ public class RecycleItemGridContent : MonoBehaviour
 
     private void UpdateViewportDimensions()
     {
-        viewportDimensions = viewportRectTransform.rect.size;
-        viewportDimensionsInCells = ConvertRectDimensionsToDimensionsInCells(
-            viewportDimensions,
+        ViewportDimensions = viewportRectTransform.rect.size;
+        ViewportDimensionsInCells = ConvertRectDimensionsToDimensionsInCells(
+            ViewportDimensions,
             cellDimensions,
             cellSpacing
         );
@@ -132,10 +191,12 @@ public class RecycleItemGridContent : MonoBehaviour
         // (l + s)/(x + s) = n
 
         var viewportWidthInCells = Mathf.FloorToInt(
-            (rectDimensions.x + cellSpacing.x) / (cellDimensions.x + cellSpacing.x)
+            (rectDimensions.x + cellSpacing.x)
+                / (cellDimensions.x + cellSpacing.x)
         );
         var viewportHeightInCells = Mathf.FloorToInt(
-            (rectDimensions.y + cellSpacing.y) / (cellDimensions.y + cellSpacing.y)
+            (rectDimensions.y + cellSpacing.y)
+                / (cellDimensions.y + cellSpacing.y)
         );
 
         return new Vector2Int(viewportWidthInCells, viewportHeightInCells);
@@ -153,16 +214,22 @@ public class RecycleItemGridContent : MonoBehaviour
             Mathf.CeilToInt(
                 correctedScrollbarValue
                     * (
-                        Mathf.Ceil(dataSource.GetItemCount() / viewportDimensionsInCells.x)
-                        - viewportDimensionsInCells.y
+                        Mathf.Ceil(
+                            dataSource.GetItemCount()
+                                / viewportDimensionsInCells.x
+                        ) - viewportDimensionsInCells.y
                     )
             ) * viewportDimensionsInCells.x;
         int lastCellIndex = Mathf.Min(
             dataSource.GetItemCount(),
-            firstCellIndex + viewportDimensionsInCells.x * viewportDimensionsInCells.y
+            firstCellIndex
+                + viewportDimensionsInCells.x * viewportDimensionsInCells.y
         );
 
-        int firstCellIndexToRender = Mathf.Max(0, firstCellIndex - viewportDimensionsInCells.x);
+        int firstCellIndexToRender = Mathf.Max(
+            0,
+            firstCellIndex - viewportDimensionsInCells.x
+        );
         int lastCellIndexToRender = Mathf.Min(
             dataSource.GetItemCount(),
             lastCellIndex + viewportDimensionsInCells.x
@@ -174,17 +241,21 @@ public class RecycleItemGridContent : MonoBehaviour
     private void RenderAndPadGridLayout((int, int) indexRangeBeingRendered)
     {
         // re-render the grid and adjust padding accordingly
-        RenderRecycledGrid(indexRangeBeingRendered, contentGridLayoutGroup, datasource);
+        RenderRecycledGrid(
+            indexRangeBeingRendered,
+            contentGridLayoutGroup,
+            Datasource
+        );
 
         // pad the rows before the first rendered index
         int rowsToPadBefore = GetRowsToPadBeforeFirstIndex(
             indexRangeBeingRendered.Item1,
-            viewportDimensionsInCells.x
+            ViewportDimensionsInCells.x
         );
         int rowsToPadAfter = GetRowsToPadAfterLastIndex(
             indexRangeBeingRendered.Item2,
-            viewportDimensionsInCells.x,
-            datasource.GetItemCount()
+            ViewportDimensionsInCells.x,
+            Datasource.GetItemCount()
         );
 
         PadRecycledGrid(
@@ -213,21 +284,31 @@ public class RecycleItemGridContent : MonoBehaviour
                 itemListElementPrefab,
                 contentRectTransform.transform
             );
-            items.Add(gameObject.GetComponentInChildren<RecyclableScrollRectContentElement>());
+            RecyclableScrollRectItems.Add(
+                gameObject.GetComponentInChildren<RecyclableScrollRectContentElement>()
+            );
         }
 
-        if (itemsToRenderCount < items.Count)
+        if (itemsToRenderCount < RecyclableScrollRectItems.Count)
         {
             foreach (
-                var item in items.GetRange(itemsToRenderCount, items.Count - itemsToRenderCount)
+                var item in RecyclableScrollRectItems.GetRange(
+                    itemsToRenderCount,
+                    RecyclableScrollRectItems.Count - itemsToRenderCount
+                )
             )
             {
                 Destroy(item.gameObject);
             }
-            items.RemoveRange(itemsToRenderCount, items.Count - itemsToRenderCount);
+            RecyclableScrollRectItems.RemoveRange(
+                itemsToRenderCount,
+                RecyclableScrollRectItems.Count - itemsToRenderCount
+            );
         }
 
-        foreach (RecyclableScrollRectContentElement element in items)
+        foreach (
+            RecyclableScrollRectContentElement element in RecyclableScrollRectItems
+        )
         {
             if (indexToRender < lastIndexToRender)
             {
@@ -276,14 +357,22 @@ public class RecycleItemGridContent : MonoBehaviour
         return indexFirst / elementsPerRow;
     }
 
-    private int GetRowsToPadAfterLastIndex(int indexLast, int elementsPerRow, int indexMax)
+    private int GetRowsToPadAfterLastIndex(
+        int indexLast,
+        int elementsPerRow,
+        int indexMax
+    )
     {
         // the ternary modulus for rowMax (i % r == 0 ? 0 : 1) is important to keep the scroll flow smooth at the end of the list
-        int rowMax = indexMax / elementsPerRow + (indexMax % elementsPerRow == 0 ? 0 : 1);
+        int rowMax =
+            indexMax / elementsPerRow
+            + (indexMax % elementsPerRow == 0 ? 0 : 1);
 
         // the ternary modulus for rowCurrent (i % r == 0 ? 0 : 1) is important to keep the scroll position corrected at the end of the list
         // otherwise, having a non-multiple of elementsPerRow items results in an extra row of padding to be added
-        int rowCurrent = indexLast / elementsPerRow + (indexLast % elementsPerRow == 0 ? 0 : 1);
+        int rowCurrent =
+            indexLast / elementsPerRow
+            + (indexLast % elementsPerRow == 0 ? 0 : 1);
 
         return rowMax - rowCurrent;
     }

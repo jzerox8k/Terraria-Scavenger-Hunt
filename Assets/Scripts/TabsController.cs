@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,12 +9,16 @@ public class TabsController : MonoBehaviour
     public GameObject filters;
     public GameObject selected;
 
+    SelectedItemListController selectedItemListController;
+
     private void Awake()
     {
-        SelectedItemListController.OnSelectedItemsChanged += OnDatasetLoaded;
+        selectedItemListController.OnDataSourceLoaded += OnDatasetLoaded;
     }
 
-    private void OnDatasetLoaded()
+    private void OnDatasetLoaded(
+        IRecyclableScrollRectDataSource.EventArguments arguments
+    )
     {
         OpenLibrary();
     }
