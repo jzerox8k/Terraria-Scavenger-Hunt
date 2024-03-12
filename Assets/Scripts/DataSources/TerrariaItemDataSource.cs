@@ -1,26 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TerrariaAssets;
-
-public interface ITerrariaDictionaryDataSource
-    : IDictionaryDataSource<int, TerrariaItemData> { }
+using UnityEngine;
 
 /// <summary>
 /// A class used to implement various events relating to <see cref="TerrariaItemData"/> data sources.
 /// </summary>
 public class TerrariaItemDataSource
-    : ITerrariaDictionaryDataSource,
+    : MonoBehaviour,
+        ITerrariaDictionaryDataSource,
         IRecyclableScrollRectDataSource
 {
     public Dictionary<int, TerrariaItemData> Data { get; set; }
-
-    public event Action<ITerrariaDictionaryDataSource.EventArguments> OnDictionaryDataSourceChanged;
-    public event Action<ITerrariaDictionaryDataSource.EventArguments> OnDictionaryDataSourceLoaded;
-    public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceChanged;
-    public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceLoaded;
 
     public int GetItemCount()
     {
@@ -45,4 +37,34 @@ public class TerrariaItemDataSource
     {
         Data = new();
     }
+
+    public void InvokeOnDictionaryDataSourceChanged(
+        ITerrariaDictionaryDataSource.EventArguments arguments
+    )
+    {
+        OnDictionaryDataSourceChanged.Invoke(arguments);
+    }
+
+    public void InvokeOnDictionaryDataSourceLoaded(
+        ITerrariaDictionaryDataSource.EventArguments arguments
+    )
+    {
+        OnDictionaryDataSourceLoaded.Invoke(arguments);
+    }
+
+    public void InvokeOnDataSourceChanged(
+        IRecyclableScrollRectDataSource.EventArguments arguments
+    )
+    {
+        OnDataSourceChanged(arguments);
+    }
+
+    public void InvokeOnDataSourceLoaded(
+        IRecyclableScrollRectDataSource.EventArguments arguments
+    )
+    {
+        OnDataSourceLoaded(arguments);
+    }
+
+    private void Awake() { }
 }

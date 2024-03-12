@@ -8,43 +8,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class RecyclableScrollRectDataSourceEventArguments
-{
-    public IRecyclableScrollRectDataSource DataSource { get; set; }
-
-    public RecyclableScrollRectDataSourceEventArguments(
-        IRecyclableScrollRectDataSource dataSource
-    )
-    {
-        DataSource = dataSource;
-    }
-}
-
-/// <summary>
-/// A class uses to transfer data source event information beween <see cref="RecyclableItemGridLayoutGroup"/>s and the outside world.
-/// </summary>
-/// <remarks>
-/// <para>
-/// An object that emits these events should derive from this class and implement overrides for the events.
-/// </para>
-/// <para>
-/// A <see cref="RecyclableItemGridLayoutGroup"/> that subscribes to these events should have an internal member that references the object that will
-/// emit these events.
-/// </para>
-/// </remarks>
-public abstract class RecyclableScrollRectDataSourceEvents : MonoBehaviour
-{
-    /// <summary>
-    /// Used to inform subscribers that the data source they are subscribed to has changed.
-    /// </summary>
-    public abstract event Action<RecyclableScrollRectDataSourceEventArguments> OnDataSourceChanged;
-
-    /// <summary>
-    /// Used to inform subscribers that the data source they are subscribed to has been loaded.
-    /// </summary>
-    public abstract event Action<RecyclableScrollRectDataSourceEventArguments> OnDataSourceLoaded;
-}
-
+[Serializable]
 public class RecyclableItemGridLayoutGroup : MonoBehaviour
 {
     // These objects are to be populated in the editor.
@@ -53,46 +17,47 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
     public GridLayoutGroup contentGridLayoutGroup;
     public GameObject itemListElementPrefab;
     public Scrollbar scrollbar;
-    public RecyclableScrollRectDataSourceEvents dataSourceEvents;
+    public TerrariaItemDataSource TerrariaItemDataSource;
 
     // These objects are internal to the implementation of the RecycleItemGridContent class.
+    private IRecyclableScrollRectDataSource DataSource;
     private List<RecyclableScrollRectContentElement> RecyclableScrollRectItems =
         new List<RecyclableScrollRectContentElement>();
-    private IRecyclableScrollRectDataSource Datasource;
 
-    public Vector2 ViewportDimensions = new Vector2();
-    public Vector2 ContentDimensions = new Vector2();
-    public Vector2Int ViewportDimensionsInCells = new Vector2Int();
+    private Vector2 ViewportDimensions = new Vector2();
+    private Vector2 ContentDimensions = new Vector2();
+    private Vector2Int ViewportDimensionsInCells = new Vector2Int();
 
     // TODO: Rework the dataset loading events across all classes that use them.
 
     // TODO: We don't need to update the cell dimensions and spacing on every frame update.
     // If we want to make them resizeable in the future we will need to listen to a UI event.
-    public Vector2 cellDimensions = new Vector2();
-    public Vector2 cellSpacing = new Vector2();
+    private Vector2 cellDimensions = new Vector2();
+    private Vector2 cellSpacing = new Vector2();
 
-    public (int, int) indexRangeBeingRendered;
+    private (int, int) indexRangeBeingRendered;
 
     private void Awake()
     {
-        dataSourceEvents.OnDataSourceLoaded += OnDatasetLoaded;
-        dataSourceEvents.OnDataSourceChanged += OnDataSourceChanged;
+        DataSource = TerrariaItemDataSource;
+        DataSource.OnDataSourceLoaded += OnDatasetLoaded;
+        DataSource.OnDataSourceChanged += OnDataSourceChanged;
     }
 
     public void OnDatasetLoaded(
-        RecyclableScrollRectDataSourceEventArguments DataSourceEventArguments
+        IRecyclableScrollRectDataSource.EventArguments DataSourceEventArguments
     )
     {
-        Datasource = DataSourceEventArguments.DataSource;
+        DataSource = DataSourceEventArguments.DataSource;
 
         StartCoroutine(InitializeScrollRect());
     }
 
     public void OnDataSourceChanged(
-        RecyclableScrollRectDataSourceEventArguments DataSourceEventArguments
+        IRecyclableScrollRectDataSource.EventArguments DataSourceEventArguments
     )
     {
-        Datasource = DataSourceEventArguments.DataSource;
+        DataSource = DataSourceEventArguments.DataSource;
 
         RenderScrollRect();
     }
@@ -128,7 +93,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         indexRangeBeingRendered = GetFirstAndLastIndicesToRender(
             scrollbar.value,
             ViewportDimensionsInCells,
-            Datasource
+            DataSource
         );
 
         RenderAndPadGridLayout(indexRangeBeingRendered);
@@ -152,7 +117,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(
             eventData,
             ViewportDimensionsInCells,
-            Datasource
+            DataSource
         );
         if (indexRangeBeingRendered != indexRangeToRender)
         {
@@ -244,7 +209,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         RenderRecycledGrid(
             indexRangeBeingRendered,
             contentGridLayoutGroup,
-            Datasource
+            DataSource
         );
 
         // pad the rows before the first rendered index
@@ -255,7 +220,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         int rowsToPadAfter = GetRowsToPadAfterLastIndex(
             indexRangeBeingRendered.Item2,
             ViewportDimensionsInCells.x,
-            Datasource.GetItemCount()
+            DataSource.GetItemCount()
         );
 
         PadRecycledGrid(

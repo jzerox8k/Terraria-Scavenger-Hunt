@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using TerrariaAssets;
+using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEngine;
 
-public class ItemLibraryController : MonoBehaviour
+public class ItemLibraryController : TerrariaItemDataSource
 {
     public Transform content;
     public TextAsset itemDataFile;
-    public TerrariaItemDataSource itemLibraryDataSource;
 
-    public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceChanged;
-    public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceLoaded;
+    [SerializeField]
+    TerrariaItemDataSource itemLibraryDataSource = new();
 
     // Start is called before the first frame update.
     private void Start()
@@ -53,8 +53,8 @@ public class ItemLibraryController : MonoBehaviour
             itemLibraryDataSource.Data.Add(itemData.itemid, itemData);
         }
 
-        Debug.Log($"about to invoke OnDatasetLoaded event Action");
+        Debug.Log($"About to invoke OnDataSourceLoaded event Action");
 
-        OnDataSourceLoaded.Invoke(new(itemLibraryDataSource));
+        InvokeOnDataSourceLoaded(new(itemLibraryDataSource));
     }
 }

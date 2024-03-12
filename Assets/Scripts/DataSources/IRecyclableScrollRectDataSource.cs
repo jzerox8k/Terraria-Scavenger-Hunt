@@ -43,16 +43,6 @@ public interface IRecyclableScrollRectDataSource
             DataSource = dataSource;
         }
     }
-
-    /// <summary>
-    /// Used to inform subscribers that the data source they are subscribed to has changed.
-    /// </summary>
-    public event Action<EventArguments> OnDataSourceChanged;
-
-    /// <summary>
-    /// Used to inform subscribers that the data source they are subscribed to has been loaded.
-    /// </summary>
-    public event Action<EventArguments> OnDataSourceLoaded;
 }
 
 public class ItemListElement

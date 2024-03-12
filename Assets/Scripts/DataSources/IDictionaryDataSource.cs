@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public interface IDictionaryDataSource<IKeyType, IValueType>
@@ -32,14 +35,4 @@ public interface IDictionaryDataSource<IKeyType, IValueType>
             DataSource = dataSource;
         }
     }
-
-    /// <summary>
-    /// Used to inform subscribers that the data source they are subscribed to has changed.
-    /// </summary>
-    public event Action<EventArguments> OnDictionaryDataSourceChanged;
-
-    /// <summary>
-    /// Used to inform subscribers that the data source they are subscribed to has been loaded.
-    /// </summary>
-    public event Action<EventArguments> OnDictionaryDataSourceLoaded;
 }

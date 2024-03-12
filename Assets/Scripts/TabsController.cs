@@ -9,6 +9,7 @@ public class TabsController : MonoBehaviour
     public GameObject filters;
     public GameObject selected;
 
+    [SerializeField]
     SelectedItemListController selectedItemListController;
 
     private void Awake()

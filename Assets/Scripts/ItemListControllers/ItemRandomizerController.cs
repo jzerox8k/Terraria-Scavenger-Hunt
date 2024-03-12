@@ -12,9 +12,6 @@ public class ItemRandomizerController : MonoBehaviour
     public List<int> SelectedPoolItemIdsAll;
     public TerrariaItemDataSource SelectedPoolItemDataset;
 
-    [SerializeField]
-    public ITerrariaDictionaryDataSource dataSourceEvents;
-
     List<TerrariaItemData> itemData;
     List<ItemGridElement> itemGridElements;
 
@@ -28,7 +25,8 @@ public class ItemRandomizerController : MonoBehaviour
     {
         itemGridElements = new List<ItemGridElement>();
         itemData = new List<TerrariaItemData>();
-        dataSourceEvents.OnDictionaryDataSourceLoaded += OnDatasetRefresh;
+        SelectedPoolItemDataset.OnDictionaryDataSourceLoaded +=
+            OnDatasetRefresh;
         SelectedPoolItemDataset = new();
 
         foreach (Transform child in transform)

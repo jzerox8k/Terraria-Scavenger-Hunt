@@ -1,14 +1,18 @@
 using System;
+using System.Linq;
 using System.Threading;
+using TerrariaAssets;
 using UnityEngine;
 
 public class SelectedItemListController
     : MonoBehaviour,
         IRecyclableScrollRectDataSource
 {
+    [SerializeField]
     TerrariaItemDataSource SelectedItems;
 
-    public ITerrariaDictionaryDataSource DataSourceEvents;
+    [SerializeField]
+    public TerrariaItemDataSource ItemLibraryDataSource;
 
     public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceChanged;
     public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceLoaded;
@@ -18,7 +22,15 @@ public class SelectedItemListController
 
     private void Awake()
     {
-        DataSourceEvents.OnDictionaryDataSourceChanged +=
+        Debug.Log(
+            "About to subscribe to ItemLibraryDataSource.OnDictionaryDataSourceLoaded."
+        );
+
+        Debug.Log(
+            $"ItemLibraryDataSource: {(ItemLibraryDataSource ? ItemLibraryDataSource.name : "null")}"
+        );
+
+        ItemLibraryDataSource.OnDictionaryDataSourceLoaded +=
             OnSelectedDataSourceLoaded;
     }
 
@@ -38,16 +50,19 @@ public class SelectedItemListController
         OnDataSourceChanged.Invoke(new(SelectedItems));
     }
 
+    public int GetItemCount()
+    {
+        return SelectedItems.Data.Count;
+    }
+
     public void SetContentElementData(
         RecyclableScrollRectContentElement element,
         int index
     )
     {
-        throw new NotImplementedException();
-    }
-
-    public int GetItemCount()
-    {
-        throw new NotImplementedException();
+        ItemListElement itemListElement = element as ItemListElement;
+        itemListElement.ConfigureElement(
+            SelectedItems.Data.Values.ToList()[index]
+        );
     }
 }
