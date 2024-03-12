@@ -8,6 +8,9 @@ using TerrariaAssets;
 public interface ITerrariaDictionaryDataSource
     : IDictionaryDataSource<int, TerrariaItemData> { }
 
+/// <summary>
+/// A class used to implement various events relating to <see cref="TerrariaItemData"/> data sources.
+/// </summary>
 public class TerrariaItemDataSource
     : ITerrariaDictionaryDataSource,
         IRecyclableScrollRectDataSource

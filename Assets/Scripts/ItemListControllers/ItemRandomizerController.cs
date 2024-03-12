@@ -9,8 +9,8 @@ public class ItemRandomizerController : MonoBehaviour
     public Button randomize;
     public Button shuffle;
 
-    List<int> SelectedPoolItemIdsAll;
-    TerrariaItemDataSource GridItemDataset;
+    public List<int> SelectedPoolItemIdsAll;
+    public TerrariaItemDataSource SelectedPoolItemDataset;
 
     [SerializeField]
     public ITerrariaDictionaryDataSource dataSourceEvents;
@@ -29,7 +29,7 @@ public class ItemRandomizerController : MonoBehaviour
         itemGridElements = new List<ItemGridElement>();
         itemData = new List<TerrariaItemData>();
         dataSourceEvents.OnDictionaryDataSourceLoaded += OnDatasetRefresh;
-        GridItemDataset = new();
+        SelectedPoolItemDataset = new();
 
         foreach (Transform child in transform)
         {
@@ -48,8 +48,8 @@ public class ItemRandomizerController : MonoBehaviour
         ITerrariaDictionaryDataSource.EventArguments arguments
     )
     {
-        GridItemDataset = new(arguments.DataSource.Data);
-        SelectedPoolItemIdsAll = GridItemDataset.Data.Keys.ToList();
+        SelectedPoolItemDataset = new(arguments.DataSource.Data);
+        SelectedPoolItemIdsAll = SelectedPoolItemDataset.Data.Keys.ToList();
         RandomizeItems();
     }
 
@@ -62,9 +62,7 @@ public class ItemRandomizerController : MonoBehaviour
         {
             int r = Random.Range(0, randomItemIds.Count);
             int itemid = randomItemIds[r];
-            itemData.Add(
-                TerrariaAssets.TerrariaItemDataSource.Instance.Items[itemid]
-            );
+            itemData.Add(SelectedPoolItemDataset.Data[itemid]);
             randomItemIds.Remove(itemid);
         }
 
@@ -93,10 +91,8 @@ public class ItemRandomizerController : MonoBehaviour
             ItemGridElement elem = itemGridElements[i];
             TerrariaItemData data = itemData[i];
             elem.itemData = data;
-            elem.itemImage.sprite = TerrariaAssets
-                .TerrariaItemDataSource
-                .Instance
-                .Items[data.itemid]
+            elem.itemImage.sprite = SelectedPoolItemDataset
+                .Data[data.itemid]
                 .sprite;
             elem.itemImage.SetNativeSize();
         }
@@ -207,9 +203,7 @@ public class ItemRandomizerController : MonoBehaviour
 
         for (int i = 0; i < MaxItems; i++)
         {
-            itemData[i] = TerrariaAssets.TerrariaItemDataSource.Instance.Items[
-                result[i]
-            ];
+            itemData[i] = SelectedPoolItemDataset.Data[result[i]];
         }
 
         DisplayItems();

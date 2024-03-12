@@ -5,13 +5,11 @@ using Newtonsoft.Json;
 using TerrariaAssets;
 using UnityEngine;
 
-public class ItemLibraryController
-    : MonoBehaviour,
-        IRecyclableScrollRectDataSource.Events
+public class ItemLibraryController : MonoBehaviour
 {
     public Transform content;
     public TextAsset itemDataFile;
-    public ITerrariaItemDataSource itemLibraryDataSource;
+    public TerrariaItemDataSource itemLibraryDataSource;
 
     public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceChanged;
     public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceLoaded;
