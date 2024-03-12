@@ -24,10 +24,10 @@ public class RecycleItemGridContent : MonoBehaviour
     public Vector2 contentDimensions = new Vector2();
     public Vector2Int viewportDimensionsInCells = new Vector2Int();
 
-    // TODO: The TabsController sets some object this item is attached to as inactive.
-    // We need better even handling to make sure the grid is populated before this object is deactivated.
+    // TODO: The TabsController sets this script is attached to inactive.
+    // We need better event handling to make sure the grid is populated before this object is deactivated.
 
-    // TODO: Rework the dataset loading events accross all classes that use them.
+    // TODO: Rework the dataset loading events across all classes that use them.
 
     // TODO: we don't need to update the cell dimensions and spacing on every frame update
     // but if we want to make them resizeable in the future we will need to listen to a UI event 
@@ -122,7 +122,11 @@ public class RecycleItemGridContent : MonoBehaviour
         return new Vector2Int(viewportWidthInCells, viewportHeightInCells);
     }
 
-    public (int, int) GetFirstAndLastIndicesToRender(float scrollbarValue, Vector2Int viewportDimensionsInCells, IRecyclableScrollRectDataSource dataSource)
+    public (int, int) GetFirstAndLastIndicesToRender(
+        float scrollbarValue, 
+        Vector2Int viewportDimensionsInCells, 
+        IRecyclableScrollRectDataSource dataSource
+    )
     {
         float correctedScrollbarValue = 1 - scrollbarValue;
 
