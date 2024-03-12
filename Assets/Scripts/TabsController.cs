@@ -29,7 +29,7 @@ public class TabsController : MonoBehaviour
     public void OpenSelected()
     {
         library.SetActive(false);
-        filters.SetActive(false);  
+        filters.SetActive(false);
 
         selected.SetActive(true);
     }

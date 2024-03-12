@@ -1,12 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using TerrariaAssets;
 using System.Linq;
+using TerrariaAssets;
 using UnityEditor;
-
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class RecycleItemGridContent : MonoBehaviour
 {
@@ -16,9 +15,10 @@ public class RecycleItemGridContent : MonoBehaviour
     public GameObject itemListElementPrefab;
     public Scrollbar scrollbar;
 
-    public List<RecyclableScrollRectContentElement> items = new List<RecyclableScrollRectContentElement>();
+    public List<RecyclableScrollRectContentElement> items =
+        new List<RecyclableScrollRectContentElement>();
 
-    public FilterableDataset datasetItems;
+    public IRecyclableScrollRectDataSource datasource;
 
     public Vector2 viewportDimensions = new Vector2();
     public Vector2 contentDimensions = new Vector2();
@@ -30,7 +30,7 @@ public class RecycleItemGridContent : MonoBehaviour
     // TODO: Rework the dataset loading events across all classes that use them.
 
     // TODO: we don't need to update the cell dimensions and spacing on every frame update
-    // but if we want to make them resizeable in the future we will need to listen to a UI event 
+    // but if we want to make them resizeable in the future we will need to listen to a UI event
     public Vector2 cellDimensions = new Vector2();
     public Vector2 cellSpacing = new Vector2();
 
@@ -62,15 +62,17 @@ public class RecycleItemGridContent : MonoBehaviour
         yield return new WaitForEndOfFrame();
 
         // update the dataset items
-        datasetItems = new FilterableDataset(TerrariaItemDataset.Instance);
+        datasource = new FilterableDataset(TerrariaItemDataset.Instance);
 
-        indexRangeBeingRendered = GetFirstAndLastIndicesToRender(scrollbar.value, viewportDimensionsInCells, datasetItems);
+        indexRangeBeingRendered = GetFirstAndLastIndicesToRender(
+            scrollbar.value,
+            viewportDimensionsInCells,
+            datasource
+        );
 
         RenderAndPadGridLayout(indexRangeBeingRendered);
 
         scrollbar.onValueChanged.AddListener(OnScroll);
-
-        
     }
 
     private void Update()
@@ -84,10 +86,15 @@ public class RecycleItemGridContent : MonoBehaviour
             OnScroll(scrollbar.value);
         }
     }
+
     public void OnScroll(float eventData)
     {
         // compare current first index to render with the first index already rendered
-        (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(eventData, viewportDimensionsInCells, datasetItems);
+        (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(
+            eventData,
+            viewportDimensionsInCells,
+            datasource
+        );
         if (indexRangeBeingRendered != indexRangeToRender)
         {
             indexRangeBeingRendered = indexRangeToRender;
@@ -98,7 +105,11 @@ public class RecycleItemGridContent : MonoBehaviour
     private void UpdateViewportDimensions()
     {
         viewportDimensions = viewportRectTransform.rect.size;
-        viewportDimensionsInCells = ConvertRectDimensionsToDimensionsInCells(viewportDimensions, cellDimensions, cellSpacing);
+        viewportDimensionsInCells = ConvertRectDimensionsToDimensionsInCells(
+            viewportDimensions,
+            cellDimensions,
+            cellSpacing
+        );
     }
 
     private void UpdateGridAndCellDimensions()
@@ -107,34 +118,55 @@ public class RecycleItemGridContent : MonoBehaviour
         cellSpacing = contentGridLayoutGroup.spacing;
     }
 
-    private Vector2Int ConvertRectDimensionsToDimensionsInCells(Vector2 rectDimensions, Vector2 cellDimensions, Vector2 cellSpacing)
+    private Vector2Int ConvertRectDimensionsToDimensionsInCells(
+        Vector2 rectDimensions,
+        Vector2 cellDimensions,
+        Vector2 cellSpacing
+    )
     {
         // length = n cells and n-1 spaces between them
         // l = n*x + (n-1)*s
         // solve for n:
         // l = n*x + n*s - s
         // l + s = n*(x + s)
-        // (l + s)/(x + s) = n 
+        // (l + s)/(x + s) = n
 
-        var viewportWidthInCells = Mathf.FloorToInt((rectDimensions.x + cellSpacing.x) / (cellDimensions.x + cellSpacing.x));
-        var viewportHeightInCells = Mathf.FloorToInt((rectDimensions.y + cellSpacing.y) / (cellDimensions.y + cellSpacing.y));
+        var viewportWidthInCells = Mathf.FloorToInt(
+            (rectDimensions.x + cellSpacing.x) / (cellDimensions.x + cellSpacing.x)
+        );
+        var viewportHeightInCells = Mathf.FloorToInt(
+            (rectDimensions.y + cellSpacing.y) / (cellDimensions.y + cellSpacing.y)
+        );
 
         return new Vector2Int(viewportWidthInCells, viewportHeightInCells);
     }
 
     public (int, int) GetFirstAndLastIndicesToRender(
-        float scrollbarValue, 
-        Vector2Int viewportDimensionsInCells, 
+        float scrollbarValue,
+        Vector2Int viewportDimensionsInCells,
         IRecyclableScrollRectDataSource dataSource
     )
     {
         float correctedScrollbarValue = 1 - scrollbarValue;
 
-        int firstCellIndex = Mathf.CeilToInt(correctedScrollbarValue * (Mathf.Ceil(dataSource.GetItemCount() / viewportDimensionsInCells.x) - viewportDimensionsInCells.y)) * viewportDimensionsInCells.x;
-        int lastCellIndex = Mathf.Min(dataSource.GetItemCount(), firstCellIndex + viewportDimensionsInCells.x * viewportDimensionsInCells.y);
+        int firstCellIndex =
+            Mathf.CeilToInt(
+                correctedScrollbarValue
+                    * (
+                        Mathf.Ceil(dataSource.GetItemCount() / viewportDimensionsInCells.x)
+                        - viewportDimensionsInCells.y
+                    )
+            ) * viewportDimensionsInCells.x;
+        int lastCellIndex = Mathf.Min(
+            dataSource.GetItemCount(),
+            firstCellIndex + viewportDimensionsInCells.x * viewportDimensionsInCells.y
+        );
 
         int firstCellIndexToRender = Mathf.Max(0, firstCellIndex - viewportDimensionsInCells.x);
-        int lastCellIndexToRender = Mathf.Min(dataSource.GetItemCount(), lastCellIndex + viewportDimensionsInCells.x);
+        int lastCellIndexToRender = Mathf.Min(
+            dataSource.GetItemCount(),
+            lastCellIndex + viewportDimensionsInCells.x
+        );
 
         return (firstCellIndexToRender, lastCellIndexToRender);
     }
@@ -142,18 +174,31 @@ public class RecycleItemGridContent : MonoBehaviour
     private void RenderAndPadGridLayout((int, int) indexRangeBeingRendered)
     {
         // re-render the grid and adjust padding accordingly
-        RenderRecycledGrid(indexRangeBeingRendered, contentGridLayoutGroup, datasetItems);
+        RenderRecycledGrid(indexRangeBeingRendered, contentGridLayoutGroup, datasource);
 
         // pad the rows before the first rendered index
-        int rowsToPadBefore = GetRowsToPadBeforeFirstIndex(indexRangeBeingRendered.Item1, viewportDimensionsInCells.x);
-        int rowsToPadAfter = GetRowsToPadAfterLastIndex(indexRangeBeingRendered.Item2, viewportDimensionsInCells.x, datasetItems.GetItemCount());
+        int rowsToPadBefore = GetRowsToPadBeforeFirstIndex(
+            indexRangeBeingRendered.Item1,
+            viewportDimensionsInCells.x
+        );
+        int rowsToPadAfter = GetRowsToPadAfterLastIndex(
+            indexRangeBeingRendered.Item2,
+            viewportDimensionsInCells.x,
+            datasource.GetItemCount()
+        );
 
-        PadRecycledGrid(rowsToPadBefore, rowsToPadAfter, contentGridLayoutGroup, cellDimensions, cellSpacing);
+        PadRecycledGrid(
+            rowsToPadBefore,
+            rowsToPadAfter,
+            contentGridLayoutGroup,
+            cellDimensions,
+            cellSpacing
+        );
     }
 
     private void RenderRecycledGrid(
-        (int, int) indexRangeBeingRendered, 
-        GridLayoutGroup contentGridLayoutGroup, 
+        (int, int) indexRangeBeingRendered,
+        GridLayoutGroup contentGridLayoutGroup,
         IRecyclableScrollRectDataSource dataSource
     )
     {
@@ -164,13 +209,18 @@ public class RecycleItemGridContent : MonoBehaviour
 
         while (itemsToRenderCount > contentGridLayoutGroup.transform.childCount)
         {
-            GameObject gameObject = Instantiate(itemListElementPrefab, contentRectTransform.transform);
+            GameObject gameObject = Instantiate(
+                itemListElementPrefab,
+                contentRectTransform.transform
+            );
             items.Add(gameObject.GetComponentInChildren<RecyclableScrollRectContentElement>());
         }
 
         if (itemsToRenderCount < items.Count)
         {
-            foreach (var item in items.GetRange(itemsToRenderCount, items.Count - itemsToRenderCount))
+            foreach (
+                var item in items.GetRange(itemsToRenderCount, items.Count - itemsToRenderCount)
+            )
             {
                 Destroy(item.gameObject);
             }
@@ -180,7 +230,7 @@ public class RecycleItemGridContent : MonoBehaviour
         foreach (RecyclableScrollRectContentElement element in items)
         {
             if (indexToRender < lastIndexToRender)
-            { 
+            {
                 if (!element.enabled)
                 {
                     element.enabled = true;
@@ -200,10 +250,20 @@ public class RecycleItemGridContent : MonoBehaviour
         }
     }
 
-    private void PadRecycledGrid(int rowsToPadBeforeFirstIndex, int rowsToPadAfterLastIndex, GridLayoutGroup contentGridLayoutGroup, Vector2 cellDimensions, Vector2 cellSpacing)
+    private void PadRecycledGrid(
+        int rowsToPadBeforeFirstIndex,
+        int rowsToPadAfterLastIndex,
+        GridLayoutGroup contentGridLayoutGroup,
+        Vector2 cellDimensions,
+        Vector2 cellSpacing
+    )
     {
-        int paddingTop = Mathf.RoundToInt(rowsToPadBeforeFirstIndex * (cellDimensions.y + cellSpacing.y));
-        int paddingBottom = Mathf.RoundToInt(rowsToPadAfterLastIndex * (cellDimensions.y + cellSpacing.y));
+        int paddingTop = Mathf.RoundToInt(
+            rowsToPadBeforeFirstIndex * (cellDimensions.y + cellSpacing.y)
+        );
+        int paddingBottom = Mathf.RoundToInt(
+            rowsToPadAfterLastIndex * (cellDimensions.y + cellSpacing.y)
+        );
 
         contentGridLayoutGroup.padding.top = paddingTop;
         contentGridLayoutGroup.padding.bottom = paddingBottom;

@@ -1,13 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using TerrariaAssets;
-using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
-
-using PolyAndCode.UI;
+using Newtonsoft.Json;
+using TerrariaAssets;
+using UnityEngine;
 
 public class ItemLibraryController : MonoBehaviour
 {
@@ -28,12 +24,16 @@ public class ItemLibraryController : MonoBehaviour
         Debug.Log(itemDataFile.text);
 
         // get item data from assets
-        Dictionary<int, TerrariaItemData> itemJsonData = JsonConvert.DeserializeObject<Dictionary<int, TerrariaItemData>>(itemDataFile.text);
+        Dictionary<int, TerrariaItemData> itemJsonData = JsonConvert.DeserializeObject<
+            Dictionary<int, TerrariaItemData>
+        >(itemDataFile.text);
 
         Debug.Log($"{itemJsonData.Count} items found and parsed");
 
         // remove unobtainable items
-        itemJsonData = itemJsonData.Where(x => !(x.Value.unobtainable ?? false)).ToDictionary(p => p.Key, p => p.Value);
+        itemJsonData = itemJsonData
+            .Where(x => !(x.Value.unobtainable ?? false))
+            .ToDictionary(p => p.Key, p => p.Value);
 
         Debug.Log($"{itemJsonData.Count} items found after removing unobtainable items");
 
