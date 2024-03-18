@@ -1,34 +1,26 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using TerrariaAssets;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-[Serializable]
 public class RecyclableItemGridLayoutGroup : MonoBehaviour
 {
-    // These objects are to be populated in the editor.
-    public RectTransform viewportRectTransform;
-    public RectTransform contentRectTransform;
-    public GridLayoutGroup contentGridLayoutGroup;
-    public GameObject itemListElementPrefab;
-    public Scrollbar scrollbar;
-    public TerrariaItemDataSource TerrariaItemDataSource;
+    // These objects are to be populated in the constructor.
+    public RectTransform ViewportRectTransform;
+    public RectTransform ContentRectTransform;
+    public GridLayoutGroup ContentGridLayoutGroup;
+    public GameObject ItemListElementPrefab;
+    public Scrollbar Scrollbar;
+    public IRecyclableScrollRectDataSource DataSource;
+    public event Action OnRecyclableScrollRectDataSourceLoaded;
 
     // These objects are internal to the implementation of the RecycleItemGridContent class.
-    private IRecyclableScrollRectDataSource DataSource;
     private List<RecyclableScrollRectContentElement> RecyclableScrollRectItems =
         new List<RecyclableScrollRectContentElement>();
 
     private Vector2 ViewportDimensions = new Vector2();
-    private Vector2 ContentDimensions = new Vector2();
     private Vector2Int ViewportDimensionsInCells = new Vector2Int();
-
-    // TODO: Rework the dataset loading events across all classes that use them.
 
     // TODO: We don't need to update the cell dimensions and spacing on every frame update.
     // If we want to make them resizeable in the future we will need to listen to a UI event.
@@ -39,30 +31,20 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
 
     private void Awake()
     {
-        DataSource = TerrariaItemDataSource;
-        DataSource.OnDataSourceLoaded += OnDatasetLoaded;
-        DataSource.OnDataSourceChanged += OnDataSourceChanged;
+        Scrollbar.onValueChanged.AddListener(OnScroll);
     }
 
-    public void OnDatasetLoaded(
-        IRecyclableScrollRectDataSource.EventArguments DataSourceEventArguments
-    )
+    public void LoadDataSource(IRecyclableScrollRectDataSource dataSource)
     {
-        DataSource = DataSourceEventArguments.DataSource;
+        // Update the datasource reference.
+        DataSource = dataSource;
 
+        // When this is complete, any objects awaiting the dataset to complete
+        // loading will recive an event trigger.
         StartCoroutine(InitializeScrollRect());
     }
 
-    public void OnDataSourceChanged(
-        IRecyclableScrollRectDataSource.EventArguments DataSourceEventArguments
-    )
-    {
-        DataSource = DataSourceEventArguments.DataSource;
-
-        RenderScrollRect();
-    }
-
-    IEnumerator InitializeScrollRect()
+    private IEnumerator InitializeScrollRect()
     {
         // This forces the grid to render once, so any initial formatting
         // occurs first.
@@ -75,7 +57,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
 
         // Clear any existing elements from the editor. These will be filled
         // in from the dataset provided.
-        foreach (Transform child in contentRectTransform.transform)
+        foreach (Transform child in ContentRectTransform.transform)
         {
             Destroy(child.gameObject);
         }
@@ -85,13 +67,15 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
 
         RenderScrollRect();
 
-        scrollbar.onValueChanged.AddListener(OnScroll);
+        // Let all objects subscribed to this dataset know that it has
+        // finished loading.
+        OnRecyclableScrollRectDataSourceLoaded.Invoke();
     }
 
     private void RenderScrollRect()
     {
         indexRangeBeingRendered = GetFirstAndLastIndicesToRender(
-            scrollbar.value,
+            Scrollbar.value,
             ViewportDimensionsInCells,
             DataSource
         );
@@ -101,17 +85,17 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
 
     private void Update()
     {
-        if (viewportRectTransform.hasChanged)
+        if (ViewportRectTransform.hasChanged)
         {
             UpdateViewportDimensions();
 
-            viewportRectTransform.hasChanged = false;
+            ViewportRectTransform.hasChanged = false;
 
-            OnScroll(scrollbar.value);
+            OnScroll(Scrollbar.value);
         }
     }
 
-    public void OnScroll(float eventData)
+    private void OnScroll(float eventData)
     {
         // compare current first index to render with the first index already rendered
         (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(
@@ -128,7 +112,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
 
     private void UpdateViewportDimensions()
     {
-        ViewportDimensions = viewportRectTransform.rect.size;
+        ViewportDimensions = ViewportRectTransform.rect.size;
         ViewportDimensionsInCells = ConvertRectDimensionsToDimensionsInCells(
             ViewportDimensions,
             cellDimensions,
@@ -138,8 +122,8 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
 
     private void UpdateGridAndCellDimensions()
     {
-        cellDimensions = contentGridLayoutGroup.cellSize;
-        cellSpacing = contentGridLayoutGroup.spacing;
+        cellDimensions = ContentGridLayoutGroup.cellSize;
+        cellSpacing = ContentGridLayoutGroup.spacing;
     }
 
     private Vector2Int ConvertRectDimensionsToDimensionsInCells(
@@ -167,7 +151,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         return new Vector2Int(viewportWidthInCells, viewportHeightInCells);
     }
 
-    public (int, int) GetFirstAndLastIndicesToRender(
+    private (int, int) GetFirstAndLastIndicesToRender(
         float scrollbarValue,
         Vector2Int viewportDimensionsInCells,
         IRecyclableScrollRectDataSource dataSource
@@ -208,7 +192,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         // re-render the grid and adjust padding accordingly
         RenderRecycledGrid(
             indexRangeBeingRendered,
-            contentGridLayoutGroup,
+            ContentGridLayoutGroup,
             DataSource
         );
 
@@ -226,7 +210,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         PadRecycledGrid(
             rowsToPadBefore,
             rowsToPadAfter,
-            contentGridLayoutGroup,
+            ContentGridLayoutGroup,
             cellDimensions,
             cellSpacing
         );
@@ -246,8 +230,8 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         while (itemsToRenderCount > contentGridLayoutGroup.transform.childCount)
         {
             GameObject gameObject = Instantiate(
-                itemListElementPrefab,
-                contentRectTransform.transform
+                ItemListElementPrefab,
+                ContentRectTransform.transform
             );
             RecyclableScrollRectItems.Add(
                 gameObject.GetComponentInChildren<RecyclableScrollRectContentElement>()
@@ -314,7 +298,7 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         contentGridLayoutGroup.padding.top = paddingTop;
         contentGridLayoutGroup.padding.bottom = paddingBottom;
 
-        LayoutRebuilder.ForceRebuildLayoutImmediate(contentRectTransform);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(ContentRectTransform);
     }
 
     private int GetRowsToPadBeforeFirstIndex(int indexFirst, int elementsPerRow)

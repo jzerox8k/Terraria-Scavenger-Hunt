@@ -4,19 +4,53 @@ using System.Linq;
 using TerrariaAssets;
 using UnityEngine;
 
-/// <summary>
-/// A class used to implement various events relating to <see cref="TerrariaItemData"/> data sources.
-/// </summary>
-public class TerrariaItemDataSource
-    : MonoBehaviour,
-        ITerrariaDictionaryDataSource,
-        IRecyclableScrollRectDataSource
+public class TerrariaItemDictionary : Dictionary<int, TerrariaItemData>
 {
-    public Dictionary<int, TerrariaItemData> Data { get; set; }
+    public TerrariaItemDictionary(TerrariaItemDictionary keyValuePairs)
+        : base(keyValuePairs) { }
+
+    public TerrariaItemDictionary()
+        : base() { }
+}
+
+public class TerrariaItemDataSource : IRecyclableScrollRectDataSource
+{
+    private TerrariaItemDictionary _itemDictionaryData = new();
+
+    public TerrariaItemDictionary ItemDictionaryData
+    {
+        get => _itemDictionaryData;
+        set
+        {
+            Debug.Log(
+                $"Assignment to a TerrariaItemDictionary is invoking OnDataSourceChanged"
+            );
+            _itemDictionaryData = value;
+            OnDataSourceChanged.Invoke(_itemDictionaryData);
+        }
+    }
+
+    public TerrariaItemDataSource(TerrariaItemDataSource terrariaItemDataSource)
+    {
+        _itemDictionaryData = new(terrariaItemDataSource._itemDictionaryData);
+    }
+
+    public TerrariaItemDataSource()
+    {
+        _itemDictionaryData = new();
+    }
+
+    /// <summary>
+    /// An event action for external objects to subscribe to.
+    /// </summary>
+    /// <remarks>
+    /// Used to indicate that the datasource has changed. It supplies the dictionary data that was changed.
+    /// </remarks>
+    public event Action<TerrariaItemDictionary> OnDataSourceChanged;
 
     public int GetItemCount()
     {
-        return Data.Count;
+        return ItemDictionaryData.Count;
     }
 
     public void SetContentElementData(
@@ -25,46 +59,8 @@ public class TerrariaItemDataSource
     )
     {
         ItemListElement itemListElement = element as ItemListElement;
-        itemListElement.ConfigureElement(Data.Values.ToList()[index]);
+        itemListElement.ConfigureElement(
+            ItemDictionaryData.Values.ToList()[index]
+        );
     }
-
-    public TerrariaItemDataSource(Dictionary<int, TerrariaItemData> data)
-    {
-        Data = data;
-    }
-
-    public TerrariaItemDataSource()
-    {
-        Data = new();
-    }
-
-    public void InvokeOnDictionaryDataSourceChanged(
-        ITerrariaDictionaryDataSource.EventArguments arguments
-    )
-    {
-        OnDictionaryDataSourceChanged.Invoke(arguments);
-    }
-
-    public void InvokeOnDictionaryDataSourceLoaded(
-        ITerrariaDictionaryDataSource.EventArguments arguments
-    )
-    {
-        OnDictionaryDataSourceLoaded.Invoke(arguments);
-    }
-
-    public void InvokeOnDataSourceChanged(
-        IRecyclableScrollRectDataSource.EventArguments arguments
-    )
-    {
-        OnDataSourceChanged(arguments);
-    }
-
-    public void InvokeOnDataSourceLoaded(
-        IRecyclableScrollRectDataSource.EventArguments arguments
-    )
-    {
-        OnDataSourceLoaded(arguments);
-    }
-
-    private void Awake() { }
 }

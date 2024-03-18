@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TerrariaAssets;
@@ -9,11 +10,27 @@ public class ItemRandomizerController : MonoBehaviour
     public Button randomize;
     public Button shuffle;
 
-    public List<int> SelectedPoolItemIdsAll;
-    public TerrariaItemDataSource SelectedPoolItemDataset;
+    /// <summary>
+    /// The selected items data source controller.
+    /// </summary>
+    public SelectedItemListController SelectedItemList;
 
+    /// <summary>
+    /// The local reference of the items that the randomizer can pull from.
+    /// </summary>
+    TerrariaItemDictionary RandomizerItemlist;
+
+    /// <summary>
+    /// The item data that will populate the 5x5 grid.
+    /// </summary>
     List<TerrariaItemData> itemData;
+
+    /// <summary>
+    /// The game objects that compose th 5x5 grid.
+    /// </summary>
     List<ItemGridElement> itemGridElements;
+
+    public event Action OnDataSourceLoaded;
 
     public SeedDisplay seedDisplay;
 
@@ -21,13 +38,14 @@ public class ItemRandomizerController : MonoBehaviour
     private const string AlphaNumericCipher =
         "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+";
 
-    void Awake()
+    void Awake() { }
+
+    void Start()
     {
         itemGridElements = new List<ItemGridElement>();
         itemData = new List<TerrariaItemData>();
-        SelectedPoolItemDataset.OnDictionaryDataSourceLoaded +=
-            OnDatasetRefresh;
-        SelectedPoolItemDataset = new();
+        SelectedItemList.SelectedItems.OnDataSourceChanged +=
+            OnDataSourceChanged;
 
         foreach (Transform child in transform)
         {
@@ -42,25 +60,23 @@ public class ItemRandomizerController : MonoBehaviour
         Debug.Log($"{itemGridElements.Count} grid elements found");
     }
 
-    private void OnDatasetRefresh(
-        ITerrariaDictionaryDataSource.EventArguments arguments
-    )
+    private void OnDataSourceChanged(TerrariaItemDictionary dictionary)
     {
-        SelectedPoolItemDataset = new(arguments.DataSource.Data);
-        SelectedPoolItemIdsAll = SelectedPoolItemDataset.Data.Keys.ToList();
+        RandomizerItemlist = dictionary;
+        OnDataSourceLoaded.Invoke();
         RandomizeItems();
     }
 
     public void RandomizeItems()
     {
-        List<int> randomItemIds = SelectedPoolItemIdsAll.ConvertAll(x => x);
+        List<int> randomItemIds = RandomizerItemlist.Keys.ToList();
 
         itemData.Clear();
         for (int i = 0; i < MaxItems; i++)
         {
-            int r = Random.Range(0, randomItemIds.Count);
+            int r = UnityEngine.Random.Range(0, randomItemIds.Count);
             int itemid = randomItemIds[r];
-            itemData.Add(SelectedPoolItemDataset.Data[itemid]);
+            itemData.Add(RandomizerItemlist[itemid]);
             randomItemIds.Remove(itemid);
         }
 
@@ -74,7 +90,7 @@ public class ItemRandomizerController : MonoBehaviour
 
         for (int i = 0; i < MaxItems; i++)
         {
-            int r = Random.Range(0, items.Count);
+            int r = UnityEngine.Random.Range(0, items.Count);
             itemData.Add(items[r]);
             items.RemoveAt(r);
         }
@@ -89,9 +105,7 @@ public class ItemRandomizerController : MonoBehaviour
             ItemGridElement elem = itemGridElements[i];
             TerrariaItemData data = itemData[i];
             elem.itemData = data;
-            elem.itemImage.sprite = SelectedPoolItemDataset
-                .Data[data.itemid]
-                .sprite;
+            elem.itemImage.sprite = RandomizerItemlist[data.itemid].sprite;
             elem.itemImage.SetNativeSize();
         }
 
@@ -201,7 +215,7 @@ public class ItemRandomizerController : MonoBehaviour
 
         for (int i = 0; i < MaxItems; i++)
         {
-            itemData[i] = SelectedPoolItemDataset.Data[result[i]];
+            itemData[i] = RandomizerItemlist[result[i]];
         }
 
         DisplayItems();

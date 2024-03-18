@@ -1432,6 +1432,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   randomize: {fileID: 1369415033}
   shuffle: {fileID: 581037804}
+  SelectedItemList: {fileID: 0}
   seedDisplay: {fileID: 2119825514}
 --- !u!114 &153887867
 MonoBehaviour:
@@ -6842,8 +6843,8 @@ GameObject:
   - component: {fileID: 711520760}
   - component: {fileID: 711520759}
   - component: {fileID: 711520758}
-  - component: {fileID: 711520762}
   - component: {fileID: 711520761}
+  - component: {fileID: 711520762}
   - component: {fileID: 711520763}
   m_Layer: 5
   m_Name: Item Library Scroll Panel
@@ -6973,17 +6974,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b9b8794eb44aa4419094d2648700e44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  viewportRectTransform: {fileID: 401605560}
-  contentRectTransform: {fileID: 758148292}
-  contentGridLayoutGroup: {fileID: 758148294}
-  itemListElementPrefab: {fileID: 8008672282247678358, guid: e0539e83391310c498c970b0fe68e51a, type: 3}
-  scrollbar: {fileID: 965420045}
-  items: []
-  viewportDimensions: {x: 0, y: 0}
-  contentDimensions: {x: 0, y: 0}
-  viewportDimensionsInCells: {x: 0, y: 0}
-  cellDimensions: {x: 0, y: 0}
-  cellSpacing: {x: 0, y: 0}
+  ViewportRectTransform: {fileID: 401605560}
+  ContentRectTransform: {fileID: 758148292}
+  ContentGridLayoutGroup: {fileID: 758148294}
+  ItemListElementPrefab: {fileID: 8008672282247678358, guid: e0539e83391310c498c970b0fe68e51a, type: 3}
+  Scrollbar: {fileID: 965420045}
 --- !u!114 &711520763
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6998,6 +6993,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   content: {fileID: 758148292}
   itemDataFile: {fileID: 4900000, guid: 7da0d78788fb0af4c8db77f39f59d09c, type: 3}
+  selectedItemListController: {fileID: 1014058944}
 --- !u!1001 &713505547
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10680,8 +10676,8 @@ GameObject:
   - component: {fileID: 1014058943}
   - component: {fileID: 1014058942}
   - component: {fileID: 1014058941}
-  - component: {fileID: 1014058940}
   - component: {fileID: 1014058939}
+  - component: {fileID: 1014058940}
   - component: {fileID: 1014058944}
   m_Layer: 5
   m_Name: Selected Item List Scroll Panel
@@ -10743,17 +10739,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b9b8794eb44aa4419094d2648700e44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  viewportRectTransform: {fileID: 475157217}
-  contentRectTransform: {fileID: 1680945747}
-  contentGridLayoutGroup: {fileID: 1680945748}
-  itemListElementPrefab: {fileID: 8008672282247678358, guid: 8735e62bdfe14e4418c8628110f1cb35, type: 3}
-  scrollbar: {fileID: 789165833}
-  items: []
-  viewportDimensions: {x: 0, y: 0}
-  contentDimensions: {x: 0, y: 0}
-  viewportDimensionsInCells: {x: 0, y: 0}
-  cellDimensions: {x: 0, y: 0}
-  cellSpacing: {x: 0, y: 0}
+  ViewportRectTransform: {fileID: 475157217}
+  ContentRectTransform: {fileID: 1680945747}
+  ContentGridLayoutGroup: {fileID: 1680945748}
+  ItemListElementPrefab: {fileID: 8008672282247678358, guid: 8735e62bdfe14e4418c8628110f1cb35, type: 3}
+  Scrollbar: {fileID: 789165833}
 --- !u!114 &1014058941
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10834,6 +10824,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38373763ee702d741a33f1776e354c61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ItemLibraryController: {fileID: 711520763}
+  RecyclableItemGridLayoutGroup: {fileID: 1014058940}
 --- !u!224 &1023427396 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 551117150593040203, guid: 1615f8f15121bf04c80d6e556a20a713, type: 3}
@@ -13278,6 +13270,7 @@ MonoBehaviour:
   library: {fileID: 711520756}
   filters: {fileID: 1587701439}
   selected: {fileID: 1014058937}
+  ItemRandomizerController: {fileID: 0}
 --- !u!224 &1303731783 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 551117150593040203, guid: 1615f8f15121bf04c80d6e556a20a713, type: 3}

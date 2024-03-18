@@ -4,55 +4,24 @@ using System.Threading;
 using TerrariaAssets;
 using UnityEngine;
 
-public class SelectedItemListController
-    : MonoBehaviour,
-        IRecyclableScrollRectDataSource
+public class SelectedItemListController : MonoBehaviour
 {
-    [SerializeField]
-    TerrariaItemDataSource SelectedItems;
+    public TerrariaItemDataSource SelectedItems;
 
-    [SerializeField]
-    public TerrariaItemDataSource ItemLibraryDataSource;
+    public ItemLibraryController ItemLibraryController;
 
-    public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceChanged;
-    public event Action<IRecyclableScrollRectDataSource.EventArguments> OnDataSourceLoaded;
+    public RecyclableItemGridLayoutGroup RecyclableItemGridLayoutGroup;
 
-    // Start is called before the first frame update
-    void Start() { }
+    private void Awake() { }
 
-    private void Awake()
+    public void OnSelectedDataSourceChanged(TerrariaItemDictionary dictionary)
     {
-        Debug.Log(
-            "About to subscribe to ItemLibraryDataSource.OnDictionaryDataSourceLoaded."
-        );
-
-        Debug.Log(
-            $"ItemLibraryDataSource: {(ItemLibraryDataSource ? ItemLibraryDataSource.name : "null")}"
-        );
-
-        ItemLibraryDataSource.OnDictionaryDataSourceLoaded +=
-            OnSelectedDataSourceLoaded;
-    }
-
-    private void OnSelectedDataSourceLoaded(
-        ITerrariaDictionaryDataSource.EventArguments arguments
-    )
-    {
-        SelectedItems = new(arguments.DataSource.Data);
-        OnDataSourceLoaded.Invoke(new(SelectedItems));
-    }
-
-    public void OnSelectedDataSourceChanged(
-        ITerrariaDictionaryDataSource.EventArguments arguments
-    )
-    {
-        SelectedItems = new(arguments.DataSource.Data);
-        OnDataSourceChanged.Invoke(new(SelectedItems));
+        SelectedItems.ItemDictionaryData = dictionary;
     }
 
     public int GetItemCount()
     {
-        return SelectedItems.Data.Count;
+        return SelectedItems.ItemDictionaryData.Count;
     }
 
     public void SetContentElementData(
@@ -62,7 +31,7 @@ public class SelectedItemListController
     {
         ItemListElement itemListElement = element as ItemListElement;
         itemListElement.ConfigureElement(
-            SelectedItems.Data.Values.ToList()[index]
+            SelectedItems.ItemDictionaryData.Values.ToList()[index]
         );
     }
 }

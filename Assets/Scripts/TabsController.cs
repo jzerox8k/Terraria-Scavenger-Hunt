@@ -9,17 +9,17 @@ public class TabsController : MonoBehaviour
     public GameObject filters;
     public GameObject selected;
 
-    [SerializeField]
-    SelectedItemListController selectedItemListController;
+    public ItemRandomizerController ItemRandomizerController;
 
-    private void Awake()
+    private void Awake() { }
+
+    private void Start()
     {
-        selectedItemListController.OnDataSourceLoaded += OnDatasetLoaded;
+        ItemRandomizerController.OnDataSourceLoaded +=
+            OnRandomizerDataSourceLoaded;
     }
 
-    private void OnDatasetLoaded(
-        IRecyclableScrollRectDataSource.EventArguments arguments
-    )
+    private void OnRandomizerDataSourceLoaded()
     {
         OpenLibrary();
     }

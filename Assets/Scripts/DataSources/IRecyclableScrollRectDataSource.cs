@@ -21,28 +21,6 @@ public interface IRecyclableScrollRectDataSource
     );
 
     public abstract int GetItemCount();
-
-    /// <summary>
-    /// A class uses to transfer data source event information beween <see cref="RecyclableItemGridLayoutGroup"/>s and the outside world.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// An object that emits these events should derive from this class and implement overrides for the events.
-    /// </para>
-    /// <para>
-    /// A <see cref="RecyclableItemGridLayoutGroup"/> that subscribes to these events should have an internal member that references the object that will
-    /// emit these events.
-    /// </para>
-    /// </remarks>
-    public class EventArguments
-    {
-        public IRecyclableScrollRectDataSource DataSource { get; set; }
-
-        public EventArguments(IRecyclableScrollRectDataSource dataSource)
-        {
-            DataSource = dataSource;
-        }
-    }
 }
 
 public class ItemListElement
