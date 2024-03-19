@@ -39,8 +39,10 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
         // Update the datasource reference.
         DataSource = dataSource;
 
-        // When this is complete, any objects awaiting the dataset to complete
-        // loading will recive an event trigger.
+        /// <remarks>
+        /// When this is complete, any objects awaiting the dataset to complete
+        /// loading will recive an event trigger on <see cref="OnRecyclableScrollRectDataSourceLoaded"/>.
+        /// </remarks>
         StartCoroutine(InitializeScrollRect());
     }
 
@@ -98,6 +100,10 @@ public class RecyclableItemGridLayoutGroup : MonoBehaviour
     private void OnScroll(float eventData)
     {
         // compare current first index to render with the first index already rendered
+        Debug.Log($"eventData: {eventData}");
+        Debug.Log($"ViewportDimensionsInCells: {ViewportDimensionsInCells}");
+        Debug.Log($"DataSource: {DataSource}");
+
         (int, int) indexRangeToRender = GetFirstAndLastIndicesToRender(
             eventData,
             ViewportDimensionsInCells,

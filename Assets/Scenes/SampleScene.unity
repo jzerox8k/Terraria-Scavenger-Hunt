@@ -1432,7 +1432,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   randomize: {fileID: 1369415033}
   shuffle: {fileID: 581037804}
-  SelectedItemList: {fileID: 0}
   seedDisplay: {fileID: 2119825514}
 --- !u!114 &153887867
 MonoBehaviour:
@@ -6845,7 +6844,6 @@ GameObject:
   - component: {fileID: 711520758}
   - component: {fileID: 711520761}
   - component: {fileID: 711520762}
-  - component: {fileID: 711520763}
   m_Layer: 5
   m_Name: Item Library Scroll Panel
   m_TagString: Untagged
@@ -6979,21 +6977,6 @@ MonoBehaviour:
   ContentGridLayoutGroup: {fileID: 758148294}
   ItemListElementPrefab: {fileID: 8008672282247678358, guid: e0539e83391310c498c970b0fe68e51a, type: 3}
   Scrollbar: {fileID: 965420045}
---- !u!114 &711520763
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 711520756}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 11ed9765adbd97b44a9ae21d0e132ba0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  content: {fileID: 758148292}
-  itemDataFile: {fileID: 4900000, guid: 7da0d78788fb0af4c8db77f39f59d09c, type: 3}
-  selectedItemListController: {fileID: 1014058944}
 --- !u!1001 &713505547
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7881,7 +7864,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.000015258789}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &758148293
@@ -8307,7 +8290,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1474686916}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.4235039
+  m_Size: 0.36202756
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -9795,7 +9778,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 563752001}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.3161367
+  m_Size: 0.28057134
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -10678,7 +10661,6 @@ GameObject:
   - component: {fileID: 1014058941}
   - component: {fileID: 1014058939}
   - component: {fileID: 1014058940}
-  - component: {fileID: 1014058944}
   m_Layer: 5
   m_Name: Selected Item List Scroll Panel
   m_TagString: Untagged
@@ -10812,20 +10794,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1014058937}
   m_CullTransparentMesh: 1
---- !u!114 &1014058944
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1014058937}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38373763ee702d741a33f1776e354c61, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ItemLibraryController: {fileID: 711520763}
-  RecyclableItemGridLayoutGroup: {fileID: 1014058940}
 --- !u!224 &1023427396 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 551117150593040203, guid: 1615f8f15121bf04c80d6e556a20a713, type: 3}
@@ -13270,7 +13238,6 @@ MonoBehaviour:
   library: {fileID: 711520756}
   filters: {fileID: 1587701439}
   selected: {fileID: 1014058937}
-  ItemRandomizerController: {fileID: 0}
 --- !u!224 &1303731783 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 551117150593040203, guid: 1615f8f15121bf04c80d6e556a20a713, type: 3}
@@ -13630,6 +13597,8 @@ GameObject:
   - component: {fileID: 1361277273}
   - component: {fileID: 1361277272}
   - component: {fileID: 1361277276}
+  - component: {fileID: 1361277278}
+  - component: {fileID: 1361277277}
   m_Layer: 5
   m_Name: Item List Panel
   m_TagString: Untagged
@@ -13724,6 +13693,37 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1361277277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1361277270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38373763ee702d741a33f1776e354c61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RecyclableItemGridLayoutGroup: {fileID: 1014058940}
+  ItemRandomizerController: {fileID: 153887866}
+  TabsController: {fileID: 0}
+--- !u!114 &1361277278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1361277270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11ed9765adbd97b44a9ae21d0e132ba0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  content: {fileID: 758148292}
+  itemDataFile: {fileID: 4900000, guid: 7da0d78788fb0af4c8db77f39f59d09c, type: 3}
+  RecyclableItemGridLayoutGroup: {fileID: 711520762}
+  SelectedItemListController: {fileID: 1361277277}
 --- !u!1 &1369415031
 GameObject:
   m_ObjectHideFlags: 0

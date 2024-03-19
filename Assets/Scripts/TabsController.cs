@@ -9,17 +9,7 @@ public class TabsController : MonoBehaviour
     public GameObject filters;
     public GameObject selected;
 
-    public ItemRandomizerController ItemRandomizerController;
-
-    private void Awake() { }
-
-    private void Start()
-    {
-        ItemRandomizerController.OnDataSourceLoaded +=
-            OnRandomizerDataSourceLoaded;
-    }
-
-    private void OnRandomizerDataSourceLoaded()
+    public void OnSelectedDataSourceLoaded()
     {
         OpenLibrary();
     }
