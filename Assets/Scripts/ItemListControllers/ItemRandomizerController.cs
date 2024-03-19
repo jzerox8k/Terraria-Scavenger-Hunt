@@ -11,11 +11,6 @@ public class ItemRandomizerController : MonoBehaviour
     public Button shuffle;
 
     /// <summary>
-    /// The selected items data source controller.
-    /// </summary>
-    public SelectedItemListController SelectedItemList;
-
-    /// <summary>
     /// The local reference of the items that the randomizer can pull from.
     /// </summary>
     TerrariaItemDictionary RandomizerItemlist;
@@ -23,14 +18,12 @@ public class ItemRandomizerController : MonoBehaviour
     /// <summary>
     /// The item data that will populate the 5x5 grid.
     /// </summary>
-    List<TerrariaItemData> itemData;
+    List<TerrariaItemData> itemData = new();
 
     /// <summary>
-    /// The game objects that compose th 5x5 grid.
+    /// The game objects that compose the 5x5 grid.
     /// </summary>
-    List<ItemGridElement> itemGridElements;
-
-    public event Action OnDataSourceLoaded;
+    List<ItemGridElement> itemGridElements = new();
 
     public SeedDisplay seedDisplay;
 
@@ -42,11 +35,6 @@ public class ItemRandomizerController : MonoBehaviour
 
     void Start()
     {
-        itemGridElements = new List<ItemGridElement>();
-        itemData = new List<TerrariaItemData>();
-        SelectedItemList.SelectedItems.OnDataSourceChanged +=
-            OnDataSourceChanged;
-
         foreach (Transform child in transform)
         {
             GameObject childImageGameObject = child.Find("Image").gameObject;
@@ -58,12 +46,12 @@ public class ItemRandomizerController : MonoBehaviour
         }
 
         Debug.Log($"{itemGridElements.Count} grid elements found");
+        RandomizeItems();
     }
 
-    private void OnDataSourceChanged(TerrariaItemDictionary dictionary)
+    public void OnDataSourceChanged(TerrariaItemDictionary dictionary)
     {
         RandomizerItemlist = dictionary;
-        OnDataSourceLoaded.Invoke();
         RandomizeItems();
     }
 

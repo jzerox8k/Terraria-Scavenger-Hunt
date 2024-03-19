@@ -26,7 +26,11 @@ public class TerrariaItemDataSource : IRecyclableScrollRectDataSource
                 $"Assignment to a TerrariaItemDictionary is invoking OnDataSourceChanged"
             );
             _itemDictionaryData = value;
-            OnDataSourceChanged.Invoke(_itemDictionaryData);
+
+            if (OnDataSourceChanged != null)
+            {
+                OnDataSourceChanged.Invoke(_itemDictionaryData);
+            }
         }
     }
 

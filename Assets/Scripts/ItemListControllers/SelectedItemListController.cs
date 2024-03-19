@@ -6,32 +6,25 @@ using UnityEngine;
 
 public class SelectedItemListController : MonoBehaviour
 {
-    public TerrariaItemDataSource SelectedItems;
-
-    public ItemLibraryController ItemLibraryController;
+    public TerrariaItemDataSource SelectedItems = new();
 
     public RecyclableItemGridLayoutGroup RecyclableItemGridLayoutGroup;
 
-    private void Awake() { }
+    public ItemRandomizerController ItemRandomizerController;
+
+    public TabsController TabsController;
 
     public void OnSelectedDataSourceChanged(TerrariaItemDictionary dictionary)
     {
         SelectedItems.ItemDictionaryData = dictionary;
-    }
 
-    public int GetItemCount()
-    {
-        return SelectedItems.ItemDictionaryData.Count;
-    }
+        Debug.Log(
+            $"Attempting to load RecyclableItemGridLayoutGroup {RecyclableItemGridLayoutGroup} with {SelectedItems.GetItemCount()} items."
+        );
 
-    public void SetContentElementData(
-        RecyclableScrollRectContentElement element,
-        int index
-    )
-    {
-        ItemListElement itemListElement = element as ItemListElement;
-        itemListElement.ConfigureElement(
-            SelectedItems.ItemDictionaryData.Values.ToList()[index]
+        RecyclableItemGridLayoutGroup.LoadDataSource(SelectedItems);
+        ItemRandomizerController.OnDataSourceChanged(
+            SelectedItems.ItemDictionaryData
         );
     }
 }

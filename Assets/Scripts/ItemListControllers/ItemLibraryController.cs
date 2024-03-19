@@ -9,28 +9,27 @@ public class ItemLibraryController : MonoBehaviour
     public Transform content;
     public TextAsset itemDataFile;
 
-    public TerrariaItemDataSource itemLibraryDataSource;
-
-    public TerrariaItemDataSource selectedItemDataSource;
-
     // Add references to all subscribers here.
     // That way, when the script is initialized, this script can set up event
     // subscriptions right away.
 
-    public SelectedItemListController selectedItemListController;
+    public TerrariaItemDataSource itemLibraryDataSource = new();
 
-    public void Awake()
-    {
-        // Set the selected item list controller as a subscriber to events pertaining to changes to the selected items.
-        /// TODO: Selection changes (filters, item IDs, tags, etc.) will happen by changing the
-        /// selected items in <see cref="selectedItemListController"/>, either in this script,
-        /// or in a separate script that referneces this one.
-        selectedItemDataSource.OnDataSourceChanged +=
-            selectedItemListController.OnSelectedDataSourceChanged;
-    }
+    public RecyclableItemGridLayoutGroup RecyclableItemGridLayoutGroup;
+
+    public TerrariaItemDataSource selectedItemDataSource = new();
+
+    public SelectedItemListController SelectedItemListController;
 
     private void Start()
     {
+        // Set the selected item list controller as a subscriber to events pertaining to changes to the selected items.
+        /// TODO: Selection changes (filters, item IDs, tags, etc.) will happen by changing the
+        /// selected items in <see cref="SelectedItemListController"/>, either in this script,
+        /// or in a separate script that referneces this one.
+        selectedItemDataSource.OnDataSourceChanged +=
+            SelectedItemListController.OnSelectedDataSourceChanged;
+
         // Initialize this object's data source.
         itemLibraryDataSource = new();
 
@@ -70,12 +69,18 @@ public class ItemLibraryController : MonoBehaviour
         }
 
         Debug.Log(
-            $"{itemLibraryDataSource.ItemDictionaryData.Count} items found after removing unobtainable items"
+            $"{itemLibraryDataSource.ItemDictionaryData.Count} items found after removing unobtainable items."
         );
 
-        Debug.Log($"About to invoke OnDataSourceLoaded event Action");
+        Debug.Log(
+            $"About to reload RecyclableItemGridLayoutGroup event Action."
+        );
+        RecyclableItemGridLayoutGroup.LoadDataSource(itemLibraryDataSource);
 
-        // The assignment should trigger the event!
-        selectedItemDataSource = new(itemLibraryDataSource);
+        Debug.Log($"About to invoke OnDataSourceLoaded event Action.");
+        // The assignment should trigger an event
+        selectedItemDataSource.ItemDictionaryData = new(
+            itemLibraryDataSource.ItemDictionaryData
+        );
     }
 }
